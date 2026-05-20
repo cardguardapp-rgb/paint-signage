@@ -3,23 +3,33 @@
  * Do not edit manually.
  * Api
  * Paint & Signage Job Management System API
- * OpenAPI spec version: 0.1.0
+ * OpenAPI spec version: 0.2.0
  */
+import type { EstimateCustomerStatus } from './estimateCustomerStatus';
 import type { EstimateLineItem } from './estimateLineItem';
 import type { EstimateMarginStatus } from './estimateMarginStatus';
 import type { EstimateStatus } from './estimateStatus';
+import type { InternalBudgetItem } from './internalBudgetItem';
 
 export interface Estimate {
   id: number;
   jobId: number;
-  title?: string;
+  /** @nullable */
+  title?: string | null;
   status: EstimateStatus;
+  internalBudgetItems?: InternalBudgetItem[];
   lineItems?: EstimateLineItem[];
   markupPercentage: number;
   customerTotal: number;
   internalCost: number;
   margin: number;
-  marginStatus?: EstimateMarginStatus;
+  marginStatus: EstimateMarginStatus;
+  grossProfit: number;
+  /** @nullable */
+  shareToken?: string | null;
+  customerStatus?: EstimateCustomerStatus;
+  /** @nullable */
+  customerNote?: string | null;
   /** @nullable */
   notes?: string | null;
   createdAt: string;

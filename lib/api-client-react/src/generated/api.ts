@@ -3,7 +3,7 @@
  * Do not edit manually.
  * Api
  * Paint & Signage Job Management System API
- * OpenAPI spec version: 0.1.0
+ * OpenAPI spec version: 0.2.0
  */
 import {
   useMutation,
@@ -24,6 +24,7 @@ import type {
   Client,
   ClientInput,
   ClientPatch,
+  CustomerQuoteView,
   DashboardSummary,
   Estimate,
   EstimateInput,
@@ -34,6 +35,8 @@ import type {
   JobPatch,
   ListJobsParams,
   PipelineStat,
+  QuoteResponse,
+  ShareResult,
   User,
   UserInput,
   UserPatch
@@ -60,7 +63,6 @@ export const getHealthCheckUrl = () => {
 }
 
 /**
- * Returns server health status
  * @summary Health check
  */
 export const healthCheck = async ( options?: RequestInit): Promise<HealthStatus> => {
@@ -1694,7 +1696,7 @@ export const getApproveEstimateUrl = (jobId: number,
 }
 
 /**
- * @summary Approve an estimate (moves job to Approved stage)
+ * @summary Approve an estimate internally (moves job to Approved stage)
  */
 export const approveEstimate = async (jobId: number,
     id: number, options?: RequestInit): Promise<Estimate> => {
@@ -1743,7 +1745,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type ApproveEstimateMutationError = ErrorType<void>
 
     /**
- * @summary Approve an estimate (moves job to Approved stage)
+ * @summary Approve an estimate internally (moves job to Approved stage)
  */
 export const useApproveEstimate = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof approveEstimate>>, TError,{jobId: number;id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
@@ -1754,6 +1756,227 @@ export const useApproveEstimate = <TError = ErrorType<void>,
         TContext
       > => {
       return useMutation(getApproveEstimateMutationOptions(options));
+    }
+
+export const getShareEstimateUrl = (jobId: number,
+    id: number,) => {
+
+
+
+
+  return `/api/jobs/${jobId}/estimates/${id}/share`
+}
+
+/**
+ * @summary Generate a shareable customer web-view link for this estimate
+ */
+export const shareEstimate = async (jobId: number,
+    id: number, options?: RequestInit): Promise<ShareResult> => {
+
+  return customFetch<ShareResult>(getShareEstimateUrl(jobId,id),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+export const getShareEstimateMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof shareEstimate>>, TError,{jobId: number;id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof shareEstimate>>, TError,{jobId: number;id: number}, TContext> => {
+
+const mutationKey = ['shareEstimate'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof shareEstimate>>, {jobId: number;id: number}> = (props) => {
+          const {jobId,id} = props ?? {};
+
+          return  shareEstimate(jobId,id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ShareEstimateMutationResult = NonNullable<Awaited<ReturnType<typeof shareEstimate>>>
+
+    export type ShareEstimateMutationError = ErrorType<void>
+
+    /**
+ * @summary Generate a shareable customer web-view link for this estimate
+ */
+export const useShareEstimate = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof shareEstimate>>, TError,{jobId: number;id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof shareEstimate>>,
+        TError,
+        {jobId: number;id: number},
+        TContext
+      > => {
+      return useMutation(getShareEstimateMutationOptions(options));
+    }
+
+export const getGetPublicQuoteUrl = (token: string,) => {
+
+
+
+
+  return `/api/quotes/${token}`
+}
+
+/**
+ * @summary Get a customer-facing quote by share token (public, no auth)
+ */
+export const getPublicQuote = async (token: string, options?: RequestInit): Promise<CustomerQuoteView> => {
+
+  return customFetch<CustomerQuoteView>(getGetPublicQuoteUrl(token),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetPublicQuoteQueryKey = (token: string,) => {
+    return [
+    `/api/quotes/${token}`
+    ] as const;
+    }
+
+
+export const getGetPublicQuoteQueryOptions = <TData = Awaited<ReturnType<typeof getPublicQuote>>, TError = ErrorType<void>>(token: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getPublicQuote>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetPublicQuoteQueryKey(token);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getPublicQuote>>> = ({ signal }) => getPublicQuote(token, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(token), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getPublicQuote>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetPublicQuoteQueryResult = NonNullable<Awaited<ReturnType<typeof getPublicQuote>>>
+export type GetPublicQuoteQueryError = ErrorType<void>
+
+
+/**
+ * @summary Get a customer-facing quote by share token (public, no auth)
+ */
+
+export function useGetPublicQuote<TData = Awaited<ReturnType<typeof getPublicQuote>>, TError = ErrorType<void>>(
+ token: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getPublicQuote>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetPublicQuoteQueryOptions(token,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getRespondToQuoteUrl = (token: string,) => {
+
+
+
+
+  return `/api/quotes/${token}/respond`
+}
+
+/**
+ * @summary Customer approves or requests changes on a shared quote
+ */
+export const respondToQuote = async (token: string,
+    quoteResponse: QuoteResponse, options?: RequestInit): Promise<CustomerQuoteView> => {
+
+  return customFetch<CustomerQuoteView>(getRespondToQuoteUrl(token),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      quoteResponse,)
+  }
+);}
+
+
+
+
+export const getRespondToQuoteMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof respondToQuote>>, TError,{token: string;data: BodyType<QuoteResponse>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof respondToQuote>>, TError,{token: string;data: BodyType<QuoteResponse>}, TContext> => {
+
+const mutationKey = ['respondToQuote'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof respondToQuote>>, {token: string;data: BodyType<QuoteResponse>}> = (props) => {
+          const {token,data} = props ?? {};
+
+          return  respondToQuote(token,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RespondToQuoteMutationResult = NonNullable<Awaited<ReturnType<typeof respondToQuote>>>
+    export type RespondToQuoteMutationBody = BodyType<QuoteResponse>
+    export type RespondToQuoteMutationError = ErrorType<void>
+
+    /**
+ * @summary Customer approves or requests changes on a shared quote
+ */
+export const useRespondToQuote = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof respondToQuote>>, TError,{token: string;data: BodyType<QuoteResponse>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof respondToQuote>>,
+        TError,
+        {token: string;data: BodyType<QuoteResponse>},
+        TContext
+      > => {
+      return useMutation(getRespondToQuoteMutationOptions(options));
     }
 
 export const getGetDashboardSummaryUrl = () => {

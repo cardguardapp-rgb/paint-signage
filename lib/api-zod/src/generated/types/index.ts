@@ -3,15 +3,17 @@
  * Do not edit manually.
  * Api
  * Paint & Signage Job Management System API
- * OpenAPI spec version: 0.1.0
+ * OpenAPI spec version: 0.2.0
  */
 
 export * from './activityItem';
 export * from './client';
 export * from './clientInput';
 export * from './clientPatch';
+export * from './customerQuoteView';
 export * from './dashboardSummary';
 export * from './estimate';
+export * from './estimateCustomerStatus';
 export * from './estimateInput';
 export * from './estimateLineItem';
 export * from './estimateMarginStatus';
@@ -19,6 +21,8 @@ export * from './estimatePatch';
 export * from './estimatePatchStatus';
 export * from './estimateStatus';
 export * from './healthStatus';
+export * from './internalBudgetItem';
+export * from './internalBudgetItemCategory';
 export * from './job';
 export * from './jobInput';
 export * from './jobPatch';
@@ -26,6 +30,9 @@ export * from './jobPatchStage';
 export * from './jobStage';
 export * from './listJobsParams';
 export * from './pipelineStat';
+export * from './quoteResponse';
+export * from './quoteResponseAction';
+export * from './shareResult';
 export * from './user';
 export * from './userInput';
 export * from './userInputRole';

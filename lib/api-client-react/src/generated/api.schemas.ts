@@ -3,7 +3,7 @@
  * Do not edit manually.
  * Api
  * Paint & Signage Job Management System API
- * OpenAPI spec version: 0.1.0
+ * OpenAPI spec version: 0.2.0
  */
 export interface HealthStatus {
   status: string;
@@ -196,8 +196,26 @@ export interface JobPatch {
   notes?: string;
 }
 
+export type InternalBudgetItemCategory = typeof InternalBudgetItemCategory[keyof typeof InternalBudgetItemCategory];
+
+
+export const InternalBudgetItemCategory = {
+  Labor: 'Labor',
+  Material: 'Material',
+  Equipment: 'Equipment',
+} as const;
+
+export interface InternalBudgetItem {
+  category: InternalBudgetItemCategory;
+  description: string;
+  quantity: number;
+  unitCost: number;
+  unit?: string;
+}
+
 export interface EstimateLineItem {
   description: string;
+  displayName?: string;
   quantity: number;
   unitPrice: number;
   unit?: string;
@@ -222,17 +240,35 @@ export const EstimateMarginStatus = {
   Critical: 'Critical',
 } as const;
 
+export type EstimateCustomerStatus = typeof EstimateCustomerStatus[keyof typeof EstimateCustomerStatus];
+
+
+export const EstimateCustomerStatus = {
+  NotShared: 'NotShared',
+  Pending: 'Pending',
+  Approved: 'Approved',
+  ChangesRequested: 'ChangesRequested',
+} as const;
+
 export interface Estimate {
   id: number;
   jobId: number;
-  title?: string;
+  /** @nullable */
+  title?: string | null;
   status: EstimateStatus;
+  internalBudgetItems?: InternalBudgetItem[];
   lineItems?: EstimateLineItem[];
   markupPercentage: number;
   customerTotal: number;
   internalCost: number;
   margin: number;
-  marginStatus?: EstimateMarginStatus;
+  marginStatus: EstimateMarginStatus;
+  grossProfit: number;
+  /** @nullable */
+  shareToken?: string | null;
+  customerStatus?: EstimateCustomerStatus;
+  /** @nullable */
+  customerNote?: string | null;
   /** @nullable */
   notes?: string | null;
   createdAt: string;
@@ -241,7 +277,8 @@ export interface Estimate {
 
 export interface EstimateInput {
   title?: string;
-  lineItems: EstimateLineItem[];
+  internalBudgetItems?: InternalBudgetItem[];
+  lineItems?: EstimateLineItem[];
   markupPercentage: number;
   notes?: string;
 }
@@ -258,10 +295,40 @@ export const EstimatePatchStatus = {
 
 export interface EstimatePatch {
   title?: string;
+  internalBudgetItems?: InternalBudgetItem[];
   lineItems?: EstimateLineItem[];
   markupPercentage?: number;
   status?: EstimatePatchStatus;
   notes?: string;
+}
+
+export interface ShareResult {
+  shareToken: string;
+  shareUrl: string;
+  estimate: Estimate;
+}
+
+export interface CustomerQuoteView {
+  estimate: Estimate;
+  jobTitle: string;
+  /** @nullable */
+  siteAddress?: string | null;
+  companyName: string;
+  clientName: string;
+  clientEmail?: string;
+}
+
+export type QuoteResponseAction = typeof QuoteResponseAction[keyof typeof QuoteResponseAction];
+
+
+export const QuoteResponseAction = {
+  approve: 'approve',
+  request_changes: 'request_changes',
+} as const;
+
+export interface QuoteResponse {
+  action: QuoteResponseAction;
+  note?: string;
 }
 
 export interface DashboardSummary {

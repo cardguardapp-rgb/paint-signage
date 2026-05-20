@@ -2,7 +2,7 @@ openapi: 3.1.0
 info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
-  version: 0.1.0
+  version: 0.2.0
   description: Paint & Signage Job Management System API
 servers:
   - url: /api
@@ -18,6 +18,8 @@ tags:
     description: Job/Project management
   - name: estimates
     description: Estimate/Quote management
+  - name: quotes
+    description: Public customer quote portal
   - name: dashboard
     description: Dashboard and analytics
 
@@ -27,7 +29,6 @@ paths:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -479,7 +480,7 @@ paths:
     post:
       operationId: approveEstimate
       tags: [estimates]
-      summary: Approve an estimate (moves job to Approved stage)
+      summary: Approve an estimate internally (moves job to Approved stage)
       parameters:
         - name: jobId
           in: path
@@ -500,6 +501,81 @@ paths:
                 $ref: "#/components/schemas/Estimate"
         "404":
           description: Not found
+
+  /jobs/{jobId}/estimates/{id}/share:
+    post:
+      operationId: shareEstimate
+      tags: [estimates]
+      summary: Generate a shareable customer web-view link for this estimate
+      parameters:
+        - name: jobId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Share token and URL generated, estimate status set to Sent
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ShareResult"
+        "404":
+          description: Not found
+
+  # Public customer quote portal
+  /quotes/{token}:
+    get:
+      operationId: getPublicQuote
+      tags: [quotes]
+      summary: Get a customer-facing quote by share token (public, no auth)
+      parameters:
+        - name: token
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Customer-facing quote view
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CustomerQuoteView"
+        "404":
+          description: Quote not found or expired
+
+  /quotes/{token}/respond:
+    post:
+      operationId: respondToQuote
+      tags: [quotes]
+      summary: Customer approves or requests changes on a shared quote
+      parameters:
+        - name: token
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/QuoteResponse"
+      responses:
+        "200":
+          description: Response recorded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CustomerQuoteView"
+        "404":
+          description: Quote not found
 
   # Dashboard
   /dashboard/summary:
@@ -767,12 +843,31 @@ components:
         notes:
           type: string
 
-    # Estimates
+    # Estimates — Internal Budget
+    InternalBudgetItem:
+      type: object
+      required: [category, description, quantity, unitCost]
+      properties:
+        category:
+          type: string
+          enum: [Labor, Material, Equipment]
+        description:
+          type: string
+        quantity:
+          type: number
+        unitCost:
+          type: number
+        unit:
+          type: string
+
+    # Estimates — Customer-Facing Line Items
     EstimateLineItem:
       type: object
       required: [description, quantity, unitPrice]
       properties:
         description:
+          type: string
+        displayName:
           type: string
         quantity:
           type: number
@@ -783,17 +878,21 @@ components:
 
     Estimate:
       type: object
-      required: [id, jobId, status, markupPercentage, customerTotal, internalCost, margin, createdAt]
+      required: [id, jobId, status, markupPercentage, customerTotal, internalCost, margin, marginStatus, grossProfit, createdAt]
       properties:
         id:
           type: integer
         jobId:
           type: integer
         title:
-          type: string
+          type: ["string", "null"]
         status:
           type: string
           enum: [Draft, Sent, Approved, Rejected]
+        internalBudgetItems:
+          type: array
+          items:
+            $ref: "#/components/schemas/InternalBudgetItem"
         lineItems:
           type: array
           items:
@@ -809,6 +908,15 @@ components:
         marginStatus:
           type: string
           enum: [Healthy, Warning, Critical]
+        grossProfit:
+          type: number
+        shareToken:
+          type: ["string", "null"]
+        customerStatus:
+          type: string
+          enum: [NotShared, Pending, Approved, ChangesRequested]
+        customerNote:
+          type: ["string", "null"]
         notes:
           type: ["string", "null"]
         createdAt:
@@ -818,10 +926,14 @@ components:
 
     EstimateInput:
       type: object
-      required: [lineItems, markupPercentage]
+      required: [markupPercentage]
       properties:
         title:
           type: string
+        internalBudgetItems:
+          type: array
+          items:
+            $ref: "#/components/schemas/InternalBudgetItem"
         lineItems:
           type: array
           items:
@@ -836,6 +948,10 @@ components:
       properties:
         title:
           type: string
+        internalBudgetItems:
+          type: array
+          items:
+            $ref: "#/components/schemas/InternalBudgetItem"
         lineItems:
           type: array
           items:
@@ -846,6 +962,44 @@ components:
           type: string
           enum: [Draft, Sent, Approved, Rejected]
         notes:
+          type: string
+
+    ShareResult:
+      type: object
+      required: [shareToken, shareUrl, estimate]
+      properties:
+        shareToken:
+          type: string
+        shareUrl:
+          type: string
+        estimate:
+          $ref: "#/components/schemas/Estimate"
+
+    CustomerQuoteView:
+      type: object
+      required: [estimate, jobTitle, companyName, clientName]
+      properties:
+        estimate:
+          $ref: "#/components/schemas/Estimate"
+        jobTitle:
+          type: string
+        siteAddress:
+          type: ["string", "null"]
+        companyName:
+          type: string
+        clientName:
+          type: string
+        clientEmail:
+          type: string
+
+    QuoteResponse:
+      type: object
+      required: [action]
+      properties:
+        action:
+          type: string
+          enum: [approve, request_changes]
+        note:
           type: string
 
     # Dashboard

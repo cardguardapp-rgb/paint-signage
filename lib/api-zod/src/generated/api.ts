@@ -3,13 +3,12 @@
  * Do not edit manually.
  * Api
  * Paint & Signage Job Management System API
- * OpenAPI spec version: 0.1.0
+ * OpenAPI spec version: 0.2.0
  */
 import * as zod from 'zod';
 
 
 /**
- * Returns server health status
  * @summary Health check
  */
 export const HealthCheckResponse = zod.object({
@@ -366,10 +365,18 @@ export const ListEstimatesParams = zod.object({
 export const ListEstimatesResponseItem = zod.object({
   "id": zod.number(),
   "jobId": zod.number(),
-  "title": zod.string().optional(),
+  "title": zod.string().nullish(),
   "status": zod.enum(['Draft', 'Sent', 'Approved', 'Rejected']),
+  "internalBudgetItems": zod.array(zod.object({
+  "category": zod.enum(['Labor', 'Material', 'Equipment']),
+  "description": zod.string(),
+  "quantity": zod.number(),
+  "unitCost": zod.number(),
+  "unit": zod.string().optional()
+})).optional(),
   "lineItems": zod.array(zod.object({
   "description": zod.string(),
+  "displayName": zod.string().optional(),
   "quantity": zod.number(),
   "unitPrice": zod.number(),
   "unit": zod.string().optional()
@@ -378,7 +385,11 @@ export const ListEstimatesResponseItem = zod.object({
   "customerTotal": zod.number(),
   "internalCost": zod.number(),
   "margin": zod.number(),
-  "marginStatus": zod.enum(['Healthy', 'Warning', 'Critical']).optional(),
+  "marginStatus": zod.enum(['Healthy', 'Warning', 'Critical']),
+  "grossProfit": zod.number(),
+  "shareToken": zod.string().nullish(),
+  "customerStatus": zod.enum(['NotShared', 'Pending', 'Approved', 'ChangesRequested']).optional(),
+  "customerNote": zod.string().nullish(),
   "notes": zod.string().nullish(),
   "createdAt": zod.string(),
   "updatedAt": zod.string().optional()
@@ -395,12 +406,20 @@ export const CreateEstimateParams = zod.object({
 
 export const CreateEstimateBody = zod.object({
   "title": zod.string().optional(),
+  "internalBudgetItems": zod.array(zod.object({
+  "category": zod.enum(['Labor', 'Material', 'Equipment']),
+  "description": zod.string(),
+  "quantity": zod.number(),
+  "unitCost": zod.number(),
+  "unit": zod.string().optional()
+})).optional(),
   "lineItems": zod.array(zod.object({
   "description": zod.string(),
+  "displayName": zod.string().optional(),
   "quantity": zod.number(),
   "unitPrice": zod.number(),
   "unit": zod.string().optional()
-})),
+})).optional(),
   "markupPercentage": zod.number(),
   "notes": zod.string().optional()
 })
@@ -417,10 +436,18 @@ export const GetEstimateParams = zod.object({
 export const GetEstimateResponse = zod.object({
   "id": zod.number(),
   "jobId": zod.number(),
-  "title": zod.string().optional(),
+  "title": zod.string().nullish(),
   "status": zod.enum(['Draft', 'Sent', 'Approved', 'Rejected']),
+  "internalBudgetItems": zod.array(zod.object({
+  "category": zod.enum(['Labor', 'Material', 'Equipment']),
+  "description": zod.string(),
+  "quantity": zod.number(),
+  "unitCost": zod.number(),
+  "unit": zod.string().optional()
+})).optional(),
   "lineItems": zod.array(zod.object({
   "description": zod.string(),
+  "displayName": zod.string().optional(),
   "quantity": zod.number(),
   "unitPrice": zod.number(),
   "unit": zod.string().optional()
@@ -429,7 +456,11 @@ export const GetEstimateResponse = zod.object({
   "customerTotal": zod.number(),
   "internalCost": zod.number(),
   "margin": zod.number(),
-  "marginStatus": zod.enum(['Healthy', 'Warning', 'Critical']).optional(),
+  "marginStatus": zod.enum(['Healthy', 'Warning', 'Critical']),
+  "grossProfit": zod.number(),
+  "shareToken": zod.string().nullish(),
+  "customerStatus": zod.enum(['NotShared', 'Pending', 'Approved', 'ChangesRequested']).optional(),
+  "customerNote": zod.string().nullish(),
   "notes": zod.string().nullish(),
   "createdAt": zod.string(),
   "updatedAt": zod.string().optional()
@@ -446,8 +477,16 @@ export const UpdateEstimateParams = zod.object({
 
 export const UpdateEstimateBody = zod.object({
   "title": zod.string().optional(),
+  "internalBudgetItems": zod.array(zod.object({
+  "category": zod.enum(['Labor', 'Material', 'Equipment']),
+  "description": zod.string(),
+  "quantity": zod.number(),
+  "unitCost": zod.number(),
+  "unit": zod.string().optional()
+})).optional(),
   "lineItems": zod.array(zod.object({
   "description": zod.string(),
+  "displayName": zod.string().optional(),
   "quantity": zod.number(),
   "unitPrice": zod.number(),
   "unit": zod.string().optional()
@@ -460,10 +499,18 @@ export const UpdateEstimateBody = zod.object({
 export const UpdateEstimateResponse = zod.object({
   "id": zod.number(),
   "jobId": zod.number(),
-  "title": zod.string().optional(),
+  "title": zod.string().nullish(),
   "status": zod.enum(['Draft', 'Sent', 'Approved', 'Rejected']),
+  "internalBudgetItems": zod.array(zod.object({
+  "category": zod.enum(['Labor', 'Material', 'Equipment']),
+  "description": zod.string(),
+  "quantity": zod.number(),
+  "unitCost": zod.number(),
+  "unit": zod.string().optional()
+})).optional(),
   "lineItems": zod.array(zod.object({
   "description": zod.string(),
+  "displayName": zod.string().optional(),
   "quantity": zod.number(),
   "unitPrice": zod.number(),
   "unit": zod.string().optional()
@@ -472,7 +519,11 @@ export const UpdateEstimateResponse = zod.object({
   "customerTotal": zod.number(),
   "internalCost": zod.number(),
   "margin": zod.number(),
-  "marginStatus": zod.enum(['Healthy', 'Warning', 'Critical']).optional(),
+  "marginStatus": zod.enum(['Healthy', 'Warning', 'Critical']),
+  "grossProfit": zod.number(),
+  "shareToken": zod.string().nullish(),
+  "customerStatus": zod.enum(['NotShared', 'Pending', 'Approved', 'ChangesRequested']).optional(),
+  "customerNote": zod.string().nullish(),
   "notes": zod.string().nullish(),
   "createdAt": zod.string(),
   "updatedAt": zod.string().optional()
@@ -489,7 +540,7 @@ export const DeleteEstimateParams = zod.object({
 
 
 /**
- * @summary Approve an estimate (moves job to Approved stage)
+ * @summary Approve an estimate internally (moves job to Approved stage)
  */
 export const ApproveEstimateParams = zod.object({
   "jobId": zod.coerce.number(),
@@ -499,10 +550,18 @@ export const ApproveEstimateParams = zod.object({
 export const ApproveEstimateResponse = zod.object({
   "id": zod.number(),
   "jobId": zod.number(),
-  "title": zod.string().optional(),
+  "title": zod.string().nullish(),
   "status": zod.enum(['Draft', 'Sent', 'Approved', 'Rejected']),
+  "internalBudgetItems": zod.array(zod.object({
+  "category": zod.enum(['Labor', 'Material', 'Equipment']),
+  "description": zod.string(),
+  "quantity": zod.number(),
+  "unitCost": zod.number(),
+  "unit": zod.string().optional()
+})).optional(),
   "lineItems": zod.array(zod.object({
   "description": zod.string(),
+  "displayName": zod.string().optional(),
   "quantity": zod.number(),
   "unitPrice": zod.number(),
   "unit": zod.string().optional()
@@ -511,10 +570,161 @@ export const ApproveEstimateResponse = zod.object({
   "customerTotal": zod.number(),
   "internalCost": zod.number(),
   "margin": zod.number(),
-  "marginStatus": zod.enum(['Healthy', 'Warning', 'Critical']).optional(),
+  "marginStatus": zod.enum(['Healthy', 'Warning', 'Critical']),
+  "grossProfit": zod.number(),
+  "shareToken": zod.string().nullish(),
+  "customerStatus": zod.enum(['NotShared', 'Pending', 'Approved', 'ChangesRequested']).optional(),
+  "customerNote": zod.string().nullish(),
   "notes": zod.string().nullish(),
   "createdAt": zod.string(),
   "updatedAt": zod.string().optional()
+})
+
+
+/**
+ * @summary Generate a shareable customer web-view link for this estimate
+ */
+export const ShareEstimateParams = zod.object({
+  "jobId": zod.coerce.number(),
+  "id": zod.coerce.number()
+})
+
+export const ShareEstimateResponse = zod.object({
+  "shareToken": zod.string(),
+  "shareUrl": zod.string(),
+  "estimate": zod.object({
+  "id": zod.number(),
+  "jobId": zod.number(),
+  "title": zod.string().nullish(),
+  "status": zod.enum(['Draft', 'Sent', 'Approved', 'Rejected']),
+  "internalBudgetItems": zod.array(zod.object({
+  "category": zod.enum(['Labor', 'Material', 'Equipment']),
+  "description": zod.string(),
+  "quantity": zod.number(),
+  "unitCost": zod.number(),
+  "unit": zod.string().optional()
+})).optional(),
+  "lineItems": zod.array(zod.object({
+  "description": zod.string(),
+  "displayName": zod.string().optional(),
+  "quantity": zod.number(),
+  "unitPrice": zod.number(),
+  "unit": zod.string().optional()
+})).optional(),
+  "markupPercentage": zod.number(),
+  "customerTotal": zod.number(),
+  "internalCost": zod.number(),
+  "margin": zod.number(),
+  "marginStatus": zod.enum(['Healthy', 'Warning', 'Critical']),
+  "grossProfit": zod.number(),
+  "shareToken": zod.string().nullish(),
+  "customerStatus": zod.enum(['NotShared', 'Pending', 'Approved', 'ChangesRequested']).optional(),
+  "customerNote": zod.string().nullish(),
+  "notes": zod.string().nullish(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string().optional()
+})
+})
+
+
+/**
+ * @summary Get a customer-facing quote by share token (public, no auth)
+ */
+export const GetPublicQuoteParams = zod.object({
+  "token": zod.coerce.string()
+})
+
+export const GetPublicQuoteResponse = zod.object({
+  "estimate": zod.object({
+  "id": zod.number(),
+  "jobId": zod.number(),
+  "title": zod.string().nullish(),
+  "status": zod.enum(['Draft', 'Sent', 'Approved', 'Rejected']),
+  "internalBudgetItems": zod.array(zod.object({
+  "category": zod.enum(['Labor', 'Material', 'Equipment']),
+  "description": zod.string(),
+  "quantity": zod.number(),
+  "unitCost": zod.number(),
+  "unit": zod.string().optional()
+})).optional(),
+  "lineItems": zod.array(zod.object({
+  "description": zod.string(),
+  "displayName": zod.string().optional(),
+  "quantity": zod.number(),
+  "unitPrice": zod.number(),
+  "unit": zod.string().optional()
+})).optional(),
+  "markupPercentage": zod.number(),
+  "customerTotal": zod.number(),
+  "internalCost": zod.number(),
+  "margin": zod.number(),
+  "marginStatus": zod.enum(['Healthy', 'Warning', 'Critical']),
+  "grossProfit": zod.number(),
+  "shareToken": zod.string().nullish(),
+  "customerStatus": zod.enum(['NotShared', 'Pending', 'Approved', 'ChangesRequested']).optional(),
+  "customerNote": zod.string().nullish(),
+  "notes": zod.string().nullish(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string().optional()
+}),
+  "jobTitle": zod.string(),
+  "siteAddress": zod.string().nullish(),
+  "companyName": zod.string(),
+  "clientName": zod.string(),
+  "clientEmail": zod.string().optional()
+})
+
+
+/**
+ * @summary Customer approves or requests changes on a shared quote
+ */
+export const RespondToQuoteParams = zod.object({
+  "token": zod.coerce.string()
+})
+
+export const RespondToQuoteBody = zod.object({
+  "action": zod.enum(['approve', 'request_changes']),
+  "note": zod.string().optional()
+})
+
+export const RespondToQuoteResponse = zod.object({
+  "estimate": zod.object({
+  "id": zod.number(),
+  "jobId": zod.number(),
+  "title": zod.string().nullish(),
+  "status": zod.enum(['Draft', 'Sent', 'Approved', 'Rejected']),
+  "internalBudgetItems": zod.array(zod.object({
+  "category": zod.enum(['Labor', 'Material', 'Equipment']),
+  "description": zod.string(),
+  "quantity": zod.number(),
+  "unitCost": zod.number(),
+  "unit": zod.string().optional()
+})).optional(),
+  "lineItems": zod.array(zod.object({
+  "description": zod.string(),
+  "displayName": zod.string().optional(),
+  "quantity": zod.number(),
+  "unitPrice": zod.number(),
+  "unit": zod.string().optional()
+})).optional(),
+  "markupPercentage": zod.number(),
+  "customerTotal": zod.number(),
+  "internalCost": zod.number(),
+  "margin": zod.number(),
+  "marginStatus": zod.enum(['Healthy', 'Warning', 'Critical']),
+  "grossProfit": zod.number(),
+  "shareToken": zod.string().nullish(),
+  "customerStatus": zod.enum(['NotShared', 'Pending', 'Approved', 'ChangesRequested']).optional(),
+  "customerNote": zod.string().nullish(),
+  "notes": zod.string().nullish(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string().optional()
+}),
+  "jobTitle": zod.string(),
+  "siteAddress": zod.string().nullish(),
+  "companyName": zod.string(),
+  "clientName": zod.string(),
+  "clientEmail": zod.string().optional()
 })
 
 

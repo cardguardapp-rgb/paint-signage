@@ -1,70 +1,42 @@
 import { useState } from "react";
-import { useGetJob, useAdvanceJobStage, useListEstimates, useApproveEstimate, useCreateEstimate, getGetJobQueryKey, getListEstimatesQueryKey } from "@workspace/api-client-react";
 import { useParams, Link } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
-import { useForm, useFieldArray } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
+import { 
+  useGetJob, 
+  useAdvanceJobStage, 
+  useListEstimates, 
+  useApproveEstimate, 
+  getGetJobQueryKey, 
+  getListEstimatesQueryKey 
+} from "@workspace/api-client-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowRight, CheckCircle2, Clock, MapPin, AlignLeft, Calculator, Plus, Trash2 } from "lucide-react";
+import { ArrowRight, CheckCircle2, Clock, MapPin, AlignLeft, Calculator, Plus, Link as LinkIcon, Edit2, MessageSquareWarning } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
 
 const stageOrder = ["Lead", "Quoting", "Approved", "Scheduled", "InProgress", "ComplianceReview", "Invoiced", "Closed"];
-
-const estimateSchema = z.object({
-  title: z.string().optional(),
-  markupPercentage: z.coerce.number().min(0, "Markup must be at least 0"),
-  lineItems: z.array(z.object({
-    description: z.string().min(1, "Required"),
-    quantity: z.coerce.number().min(1, "Must be > 0"),
-    unitPrice: z.coerce.number().min(0, "Must be >= 0"),
-    unit: z.string().optional(),
-  })).min(1, "Add at least one line item"),
-  notes: z.string().optional(),
-});
 
 export default function JobDetail() {
   const params = useParams();
   const id = Number(params.id);
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [isEstimateDialogOpen, setIsEstimateDialogOpen] = useState(false);
   
   const { data: job, isLoading: loadingJob } = useGetJob(id, { query: { enabled: !!id, queryKey: getGetJobQueryKey(id) } });
-  const { data: estimates, isLoading: loadingEstimates } = useListEstimates({ query: { enabled: !!id, queryKey: getListEstimatesQueryKey() } });
+  const { data: estimates, isLoading: loadingEstimates } = useListEstimates(id, { query: { enabled: !!id, queryKey: getListEstimatesQueryKey(id) } });
   
   const advanceStage = useAdvanceJobStage();
   const approveEstimate = useApproveEstimate();
-  const createEstimate = useCreateEstimate();
-
-  const form = useForm<z.infer<typeof estimateSchema>>({
-    resolver: zodResolver(estimateSchema),
-    defaultValues: {
-      title: "",
-      markupPercentage: 30,
-      lineItems: [{ description: "", quantity: 1, unitPrice: 0, unit: "ea" }],
-      notes: "",
-    },
-  });
-
-  const { fields, append, remove } = useFieldArray({
-    control: form.control,
-    name: "lineItems",
-  });
 
   if (loadingJob) return <Skeleton className="h-[600px] w-full" />;
   if (!job) return <div className="text-center p-12 text-lg text-muted-foreground">Job not found</div>;
 
   const currentStageIndex = stageOrder.indexOf(job.stage);
   const nextStage = currentStageIndex < stageOrder.length - 1 ? stageOrder[currentStageIndex + 1] : null;
-  const jobEstimates = estimates?.filter(e => e.jobId === id) || [];
+  const jobEstimates = estimates ?? [];
 
   const handleAdvanceStage = () => {
     advanceStage.mutate({ id }, {
@@ -79,10 +51,10 @@ export default function JobDetail() {
   };
 
   const handleApproveEstimate = (estimateId: number) => {
-    approveEstimate.mutate({ id: estimateId }, {
+    approveEstimate.mutate({ jobId: id, id: estimateId }, {
       onSuccess: () => {
         toast({ title: "Estimate approved" });
-        queryClient.invalidateQueries({ queryKey: getListEstimatesQueryKey() });
+        queryClient.invalidateQueries({ queryKey: getListEstimatesQueryKey(id) });
         queryClient.invalidateQueries({ queryKey: getGetJobQueryKey(id) });
       },
       onError: () => {
@@ -91,18 +63,10 @@ export default function JobDetail() {
     });
   };
 
-  const onSubmitEstimate = (values: z.infer<typeof estimateSchema>) => {
-    createEstimate.mutate({ data: { ...values, jobId: id } as any }, {
-      onSuccess: () => {
-        toast({ title: "Estimate created" });
-        queryClient.invalidateQueries({ queryKey: getListEstimatesQueryKey() });
-        setIsEstimateDialogOpen(false);
-        form.reset();
-      },
-      onError: () => {
-        toast({ title: "Failed to create estimate", variant: "destructive" });
-      }
-    });
+  const copyShareLink = (token: string) => {
+    const url = `${window.location.origin}/quote/${token}`;
+    navigator.clipboard.writeText(url);
+    toast({ title: "Link Copied!", description: "Customer quote link copied to clipboard." });
   };
 
   return (
@@ -158,122 +122,11 @@ export default function JobDetail() {
           <Card>
             <CardHeader className="border-b bg-muted/20 flex flex-row items-center justify-between pb-4">
               <CardTitle className="flex items-center gap-2"><Calculator className="h-5 w-5" /> Estimates</CardTitle>
-              <Dialog open={isEstimateDialogOpen} onOpenChange={setIsEstimateDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button size="sm" variant="outline" className="shadow-sm">
-                    <Plus className="h-4 w-4 mr-1" /> New Estimate
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="max-w-2xl">
-                  <DialogHeader>
-                    <DialogTitle>Create New Estimate</DialogTitle>
-                  </DialogHeader>
-                  <Form {...form}>
-                    <form onSubmit={form.handleSubmit(onSubmitEstimate)} className="space-y-6 pt-4">
-                      <div className="grid grid-cols-2 gap-4">
-                        <FormField
-                          control={form.control}
-                          name="title"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Title (optional)</FormLabel>
-                              <FormControl>
-                                <Input {...field} placeholder="e.g. Initial Quote" />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={form.control}
-                          name="markupPercentage"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Markup %</FormLabel>
-                              <FormControl>
-                                <Input type="number" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-
-                      <div>
-                        <div className="flex justify-between items-center mb-2">
-                          <h4 className="font-semibold text-sm">Line Items</h4>
-                          <Button type="button" variant="ghost" size="sm" onClick={() => append({ description: "", quantity: 1, unitPrice: 0, unit: "ea" })}>
-                            <Plus className="h-4 w-4 mr-1" /> Add Item
-                          </Button>
-                        </div>
-                        <div className="space-y-3 max-h-[300px] overflow-y-auto pr-2">
-                          {fields.map((field, index) => (
-                            <div key={field.id} className="flex gap-2 items-start bg-muted/30 p-2 rounded-md border">
-                              <div className="flex-1 space-y-2">
-                                <FormField
-                                  control={form.control}
-                                  name={`lineItems.${index}.description`}
-                                  render={({ field }) => (
-                                    <FormItem className="space-y-0">
-                                      <FormControl>
-                                        <Input {...field} placeholder="Description" className="h-8" />
-                                      </FormControl>
-                                    </FormItem>
-                                  )}
-                                />
-                                <div className="flex gap-2">
-                                  <FormField
-                                    control={form.control}
-                                    name={`lineItems.${index}.quantity`}
-                                    render={({ field }) => (
-                                      <FormItem className="space-y-0 flex-1">
-                                        <FormControl>
-                                          <Input type="number" {...field} placeholder="Qty" className="h-8" />
-                                        </FormControl>
-                                      </FormItem>
-                                    )}
-                                  />
-                                  <FormField
-                                    control={form.control}
-                                    name={`lineItems.${index}.unitPrice`}
-                                    render={({ field }) => (
-                                      <FormItem className="space-y-0 flex-1">
-                                        <FormControl>
-                                          <Input type="number" {...field} placeholder="Price" className="h-8" />
-                                        </FormControl>
-                                      </FormItem>
-                                    )}
-                                  />
-                                  <FormField
-                                    control={form.control}
-                                    name={`lineItems.${index}.unit`}
-                                    render={({ field }) => (
-                                      <FormItem className="space-y-0 w-16">
-                                        <FormControl>
-                                          <Input {...field} placeholder="Unit" className="h-8" />
-                                        </FormControl>
-                                      </FormItem>
-                                    )}
-                                  />
-                                </div>
-                              </div>
-                              <Button type="button" variant="ghost" size="icon" onClick={() => remove(index)} className="h-8 w-8 text-destructive self-center shrink-0">
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-
-                      <DialogFooter>
-                        <Button type="submit" disabled={createEstimate.isPending}>
-                          {createEstimate.isPending ? "Creating..." : "Save Estimate"}
-                        </Button>
-                      </DialogFooter>
-                    </form>
-                  </Form>
-                </DialogContent>
-              </Dialog>
+              <Button size="sm" variant="outline" className="shadow-sm" asChild>
+                <Link href={`/jobs/${job.id}/estimates/new`}>
+                  <Plus className="h-4 w-4 mr-1" /> New Estimate
+                </Link>
+              </Button>
             </CardHeader>
             <CardContent className="pt-6 p-0">
               {loadingEstimates ? (
@@ -296,19 +149,37 @@ export default function JobDetail() {
                             <Badge variant={estimate.status === 'Approved' ? 'default' : 'secondary'} className={estimate.status === 'Approved' ? 'bg-green-600 hover:bg-green-700' : ''}>
                               {estimate.status}
                             </Badge>
+                            {estimate.customerStatus && (
+                              <Badge variant="outline" className={
+                                estimate.customerStatus === 'Approved' ? 'text-green-600 border-green-200' : 
+                                estimate.customerStatus === 'ChangesRequested' ? 'text-yellow-600 border-yellow-200' : ''
+                              }>
+                                Customer: {estimate.customerStatus}
+                              </Badge>
+                            )}
                             <span className="text-sm font-medium text-muted-foreground bg-muted/50 px-2 py-0.5 rounded">
-                              Margin: {estimate.margin}%
+                              Margin: {estimate.margin?.toFixed(1)}%
                             </span>
                           </div>
                         </div>
-                        <div className="text-right">
-                          <div className="text-3xl font-black tracking-tight text-primary">${estimate.customerTotal?.toLocaleString()}</div>
-                          <div className="text-xs font-semibold text-muted-foreground mt-1 uppercase tracking-wider">Total Value</div>
+                        <div className="text-right flex flex-col items-end">
+                          <div className="text-3xl font-black tracking-tight text-primary">${estimate.customerTotal?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+                          <div className="text-xs font-semibold text-muted-foreground mt-1 uppercase tracking-wider mb-3">Total Value</div>
                         </div>
                       </div>
 
+                      {estimate.customerStatus === 'ChangesRequested' && estimate.customerNote && (
+                        <div className="mb-6 p-4 bg-yellow-50/50 border border-yellow-200 rounded-lg flex items-start gap-3">
+                          <MessageSquareWarning className="h-5 w-5 text-yellow-600 mt-0.5 shrink-0" />
+                          <div>
+                            <h4 className="font-semibold text-sm text-yellow-800 mb-1">Customer requested changes:</h4>
+                            <p className="text-sm text-yellow-900 whitespace-pre-wrap">{estimate.customerNote}</p>
+                          </div>
+                        </div>
+                      )}
+
                       {estimate.lineItems && estimate.lineItems.length > 0 && (
-                        <div className="rounded-md border overflow-hidden">
+                        <div className="rounded-md border overflow-hidden mb-6">
                           <Table>
                             <TableHeader className="bg-muted/50">
                               <TableRow>
@@ -321,10 +192,10 @@ export default function JobDetail() {
                             <TableBody>
                               {estimate.lineItems.map((item, idx) => (
                                 <TableRow key={idx}>
-                                  <TableCell className="font-medium">{item.description}</TableCell>
+                                  <TableCell className="font-medium">{item.displayName || item.description}</TableCell>
                                   <TableCell className="text-right text-muted-foreground">{item.quantity} {item.unit}</TableCell>
-                                  <TableCell className="text-right text-muted-foreground">${item.unitPrice?.toLocaleString()}</TableCell>
-                                  <TableCell className="text-right font-medium">${(item.quantity * item.unitPrice)?.toLocaleString()}</TableCell>
+                                  <TableCell className="text-right text-muted-foreground">${item.unitPrice?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                                  <TableCell className="text-right font-medium">${((item.quantity||0) * (item.unitPrice||0)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
                                 </TableRow>
                               ))}
                             </TableBody>
@@ -332,18 +203,30 @@ export default function JobDetail() {
                         </div>
                       )}
 
-                      {estimate.status === 'Sent' && (
-                        <div className="mt-6 flex justify-end">
+                      <div className="flex justify-end gap-3">
+                        <Button variant="outline" asChild>
+                          <Link href={`/jobs/${job.id}/estimates/${estimate.id}`}>
+                            <Edit2 className="h-4 w-4 mr-2" /> Edit Estimate
+                          </Link>
+                        </Button>
+                        
+                        {estimate.shareToken && (
+                          <Button variant="outline" onClick={() => copyShareLink(estimate.shareToken!)}>
+                            <LinkIcon className="h-4 w-4 mr-2" /> Share Link
+                          </Button>
+                        )}
+                        
+                        {estimate.status === 'Sent' && (
                           <Button 
                             onClick={() => handleApproveEstimate(estimate.id)}
                             disabled={approveEstimate.isPending}
-                            className="hover-elevate shadow-md bg-green-600 hover:bg-green-700 text-white"
+                            className="bg-green-600 hover:bg-green-700 text-white"
                           >
                             <CheckCircle2 className="mr-2 h-4 w-4" />
-                            Approve Estimate
+                            Approve Internally
                           </Button>
-                        </div>
-                      )}
+                        )}
+                      </div>
                     </div>
                   ))}
                 </div>

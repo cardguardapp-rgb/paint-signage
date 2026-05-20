@@ -3,13 +3,15 @@
  * Do not edit manually.
  * Api
  * Paint & Signage Job Management System API
- * OpenAPI spec version: 0.1.0
+ * OpenAPI spec version: 0.2.0
  */
 import type { EstimateLineItem } from './estimateLineItem';
+import type { InternalBudgetItem } from './internalBudgetItem';
 
 export interface EstimateInput {
   title?: string;
-  lineItems: EstimateLineItem[];
+  internalBudgetItems?: InternalBudgetItem[];
+  lineItems?: EstimateLineItem[];
   markupPercentage: number;
   notes?: string;
 }

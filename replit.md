@@ -47,6 +47,16 @@ A specialized job management system for paint and signage contractors — tracki
 - Clients list and detail pages showing associated jobs
 - Users list with role management (Admin, ProjectManager, Estimator, FieldCrew)
 - Full CRUD for jobs, clients, users, and estimates via REST API
+- **Advanced Quoting Module**: full-page estimate editor at `/jobs/:id/estimates/new` and `/jobs/:id/estimates/:estimateId` with:
+  - Dual-tab view: Internal Budget (Labor/Material/Equipment line items) + Customer Quote (presentation line items with displayName)
+  - Live gross profit margin calculation in the sticky sidebar (Internal Cost, Customer Total, Gross Profit, Margin %)
+  - Markup percentage control that recalculates totals in real time
+  - "Generate Share Link" button → calls `POST /api/jobs/:jobId/estimates/:id/share` → returns a shareable `/quote/:token` URL
+  - Customer status tracking (NotShared → Pending → Approved / ChangesRequested)
+- **Customer Quote Portal**: public page at `/quote/:token` (outside the app shell) where clients can:
+  - View the professional quote with job details, line items, and total
+  - Approve the quote or request changes (with optional note)
+  - Approving automatically advances the job stage and sets `hasApprovedEstimate = true`
 
 ## Job Stage Flow
 
