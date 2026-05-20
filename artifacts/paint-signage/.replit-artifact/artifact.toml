@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "Paint & Signage Job Manager"
+version = "1.0.0"
+id = "artifacts/paint-signage"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 19361
+
+[services.development]
+run = "pnpm --filter @workspace/paint-signage run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/paint-signage", "run", "build" ]
+publicDir = "artifacts/paint-signage/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "19361"
+BASE_PATH = "/"
