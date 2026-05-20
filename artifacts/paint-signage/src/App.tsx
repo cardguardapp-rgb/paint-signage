@@ -15,6 +15,7 @@ import NewClient from "@/pages/client-new";
 import Users from "@/pages/users";
 import EstimateEditor from "@/pages/estimate-editor";
 import QuotePortal from "@/pages/quote-portal";
+import Schedule from "@/pages/schedule";
 
 const queryClient = new QueryClient();
 
@@ -31,6 +32,7 @@ function Router() {
             <Route path="/jobs/:id/estimates/new" component={EstimateEditor} />
             <Route path="/jobs/:id/estimates/:estimateId" component={EstimateEditor} />
             <Route path="/jobs" component={Jobs} />
+            <Route path="/schedule" component={Schedule} />
             <Route path="/clients/new" component={NewClient} />
             <Route path="/clients/:id" component={ClientDetail} />
             <Route path="/clients" component={Clients} />

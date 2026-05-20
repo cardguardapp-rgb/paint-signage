@@ -5,6 +5,8 @@ import clientsRouter from "./clients";
 import jobsRouter from "./jobs";
 import estimatesRouter from "./estimates";
 import quotesRouter from "./quotes";
+import phasesRouter from "./phases";
+import notificationsRouter from "./notifications";
 import dashboardRouter from "./dashboard";
 
 const router: IRouter = Router();
@@ -15,6 +17,8 @@ router.use(clientsRouter);
 router.use(jobsRouter);
 router.use(estimatesRouter);
 router.use(quotesRouter);
+router.use(phasesRouter);
+router.use(notificationsRouter);
 router.use(dashboardRouter);
 
 export default router;

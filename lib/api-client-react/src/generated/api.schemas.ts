@@ -331,6 +331,58 @@ export interface QuoteResponse {
   note?: string;
 }
 
+export interface JobPhase {
+  id: number;
+  jobId: number;
+  name: string;
+  color: string;
+  /** @nullable */
+  startDate?: string | null;
+  /** @nullable */
+  endDate?: string | null;
+  assignedUserIds: number[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface PhaseInput {
+  /** @minLength 1 */
+  name: string;
+  color?: string;
+  /** @nullable */
+  startDate?: string | null;
+  /** @nullable */
+  endDate?: string | null;
+  assignedUserIds?: number[];
+}
+
+export interface ScheduleJob {
+  id: number;
+  title: string;
+  stage: string;
+  /** @nullable */
+  clientName?: string | null;
+  /** @nullable */
+  scheduledStart?: string | null;
+  /** @nullable */
+  scheduledEnd?: string | null;
+  /** @nullable */
+  siteAddress?: string | null;
+  phases: JobPhase[];
+}
+
+export interface Notification {
+  id: number;
+  /** @nullable */
+  userId?: number | null;
+  type: string;
+  message: string;
+  /** @nullable */
+  jobId?: number | null;
+  isRead: boolean;
+  createdAt: string;
+}
+
 export interface DashboardSummary {
   totalJobs: number;
   activeJobs: number;
@@ -358,5 +410,18 @@ export interface ActivityItem {
 export type ListJobsParams = {
 stage?: string;
 clientId?: number;
+};
+
+export type ListNotificationsParams = {
+userId?: number;
+unreadOnly?: boolean;
+};
+
+export type MarkAllNotificationsReadBody = {
+  userId?: number;
+};
+
+export type MarkAllNotificationsRead200 = {
+  updated: number;
 };
 

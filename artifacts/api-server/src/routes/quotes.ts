@@ -1,7 +1,8 @@
 import { Router, type IRouter } from "express";
 import { eq } from "drizzle-orm";
-import { db, estimatesTable, jobsTable, clientsTable, activityTable } from "@workspace/db";
+import { db, estimatesTable, jobsTable, clientsTable, activityTable, notificationsTable, usersTable } from "@workspace/db";
 import { internalBudgetItemSchema, lineItemSchema } from "@workspace/db";
+import { inArray } from "drizzle-orm";
 import {
   GetPublicQuoteParams,
   RespondToQuoteParams,
@@ -125,6 +126,24 @@ router.post("/quotes/:token/respond", async (req, res): Promise<void> => {
         action: "Customer approved the quote",
         stage: newStage,
       });
+
+      // Notify all Admin and Estimator users
+      const staffUsers = await db
+        .select({ id: usersTable.id })
+        .from(usersTable)
+        .where(inArray(usersTable.role, ["Admin", "Estimator"]));
+      if (staffUsers.length > 0) {
+        await Promise.all(
+          staffUsers.map((u) =>
+            db.insert(notificationsTable).values({
+              userId: u.id,
+              type: "quote_approved",
+              message: `Customer approved the quote for job "${job.title}"`,
+              jobId: job.id,
+            })
+          )
+        );
+      }
     }
   } else {
     const [job] = await db.select().from(jobsTable).where(eq(jobsTable.id, estimate.jobId));

@@ -729,6 +729,163 @@ export const RespondToQuoteResponse = zod.object({
 
 
 /**
+ * @summary Get all Approved and Scheduled jobs with their phases
+ */
+export const GetScheduleResponseItem = zod.object({
+  "id": zod.number(),
+  "title": zod.string(),
+  "stage": zod.string(),
+  "clientName": zod.string().nullish(),
+  "scheduledStart": zod.string().nullish(),
+  "scheduledEnd": zod.string().nullish(),
+  "siteAddress": zod.string().nullish(),
+  "phases": zod.array(zod.object({
+  "id": zod.number(),
+  "jobId": zod.number(),
+  "name": zod.string(),
+  "color": zod.string(),
+  "startDate": zod.string().nullish(),
+  "endDate": zod.string().nullish(),
+  "assignedUserIds": zod.array(zod.number()),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+}))
+})
+export const GetScheduleResponse = zod.array(GetScheduleResponseItem)
+
+
+/**
+ * @summary List phases for a job
+ */
+export const ListPhasesParams = zod.object({
+  "jobId": zod.coerce.number()
+})
+
+export const ListPhasesResponseItem = zod.object({
+  "id": zod.number(),
+  "jobId": zod.number(),
+  "name": zod.string(),
+  "color": zod.string(),
+  "startDate": zod.string().nullish(),
+  "endDate": zod.string().nullish(),
+  "assignedUserIds": zod.array(zod.number()),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
+export const ListPhasesResponse = zod.array(ListPhasesResponseItem)
+
+
+/**
+ * @summary Create a phase for a job
+ */
+export const CreatePhaseParams = zod.object({
+  "jobId": zod.coerce.number()
+})
+
+
+
+
+export const CreatePhaseBody = zod.object({
+  "name": zod.string().min(1),
+  "color": zod.string().optional(),
+  "startDate": zod.string().nullish(),
+  "endDate": zod.string().nullish(),
+  "assignedUserIds": zod.array(zod.number()).optional()
+})
+
+
+/**
+ * @summary Update a phase
+ */
+export const UpdatePhaseParams = zod.object({
+  "jobId": zod.coerce.number(),
+  "phaseId": zod.coerce.number()
+})
+
+
+
+
+export const UpdatePhaseBody = zod.object({
+  "name": zod.string().min(1),
+  "color": zod.string().optional(),
+  "startDate": zod.string().nullish(),
+  "endDate": zod.string().nullish(),
+  "assignedUserIds": zod.array(zod.number()).optional()
+})
+
+export const UpdatePhaseResponse = zod.object({
+  "id": zod.number(),
+  "jobId": zod.number(),
+  "name": zod.string(),
+  "color": zod.string(),
+  "startDate": zod.string().nullish(),
+  "endDate": zod.string().nullish(),
+  "assignedUserIds": zod.array(zod.number()),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
+
+
+/**
+ * @summary Delete a phase
+ */
+export const DeletePhaseParams = zod.object({
+  "jobId": zod.coerce.number(),
+  "phaseId": zod.coerce.number()
+})
+
+
+/**
+ * @summary List notifications (optionally filtered by userId)
+ */
+export const ListNotificationsQueryParams = zod.object({
+  "userId": zod.coerce.number().optional(),
+  "unreadOnly": zod.coerce.boolean().optional()
+})
+
+export const ListNotificationsResponseItem = zod.object({
+  "id": zod.number(),
+  "userId": zod.number().nullish(),
+  "type": zod.string(),
+  "message": zod.string(),
+  "jobId": zod.number().nullish(),
+  "isRead": zod.boolean(),
+  "createdAt": zod.string()
+})
+export const ListNotificationsResponse = zod.array(ListNotificationsResponseItem)
+
+
+/**
+ * @summary Mark a notification as read
+ */
+export const MarkNotificationReadParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const MarkNotificationReadResponse = zod.object({
+  "id": zod.number(),
+  "userId": zod.number().nullish(),
+  "type": zod.string(),
+  "message": zod.string(),
+  "jobId": zod.number().nullish(),
+  "isRead": zod.boolean(),
+  "createdAt": zod.string()
+})
+
+
+/**
+ * @summary Mark all notifications as read
+ */
+export const MarkAllNotificationsReadBody = zod.object({
+  "userId": zod.number().optional()
+})
+
+export const MarkAllNotificationsReadResponse = zod.object({
+  "updated": zod.number()
+})
+
+
+/**
  * @summary Get dashboard KPI summary
  */
 export const GetDashboardSummaryResponse = zod.object({

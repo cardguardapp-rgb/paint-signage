@@ -577,6 +577,186 @@ paths:
         "404":
           description: Quote not found
 
+  # Schedule / Gantt
+  /schedule:
+    get:
+      operationId: getSchedule
+      tags: [schedule]
+      summary: Get all Approved and Scheduled jobs with their phases
+      responses:
+        "200":
+          description: Schedule data
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ScheduleJob"
+
+  /jobs/{jobId}/phases:
+    get:
+      operationId: listPhases
+      tags: [schedule]
+      summary: List phases for a job
+      parameters:
+        - name: jobId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of phases
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/JobPhase"
+    post:
+      operationId: createPhase
+      tags: [schedule]
+      summary: Create a phase for a job
+      parameters:
+        - name: jobId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PhaseInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JobPhase"
+
+  /jobs/{jobId}/phases/{phaseId}:
+    patch:
+      operationId: updatePhase
+      tags: [schedule]
+      summary: Update a phase
+      parameters:
+        - name: jobId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: phaseId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PhaseInput"
+      responses:
+        "200":
+          description: Updated phase
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JobPhase"
+    delete:
+      operationId: deletePhase
+      tags: [schedule]
+      summary: Delete a phase
+      parameters:
+        - name: jobId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: phaseId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  # Notifications
+  /notifications:
+    get:
+      operationId: listNotifications
+      tags: [notifications]
+      summary: List notifications (optionally filtered by userId)
+      parameters:
+        - name: userId
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: unreadOnly
+          in: query
+          required: false
+          schema:
+            type: boolean
+      responses:
+        "200":
+          description: List of notifications
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Notification"
+
+  /notifications/{id}/read:
+    patch:
+      operationId: markNotificationRead
+      tags: [notifications]
+      summary: Mark a notification as read
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Updated notification
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Notification"
+
+  /notifications/read-all:
+    post:
+      operationId: markAllNotificationsRead
+      tags: [notifications]
+      summary: Mark all notifications as read
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                userId:
+                  type: integer
+      responses:
+        "200":
+          description: Count of updated notifications
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [updated]
+                properties:
+                  updated:
+                    type: integer
+
   # Dashboard
   /dashboard/summary:
     get:
@@ -1000,6 +1180,93 @@ components:
           type: string
           enum: [approve, request_changes]
         note:
+          type: string
+
+    # Schedule / Phases
+    JobPhase:
+      type: object
+      required: [id, jobId, name, color, assignedUserIds, createdAt, updatedAt]
+      properties:
+        id:
+          type: integer
+        jobId:
+          type: integer
+        name:
+          type: string
+        color:
+          type: string
+        startDate:
+          type: ["string", "null"]
+        endDate:
+          type: ["string", "null"]
+        assignedUserIds:
+          type: array
+          items:
+            type: integer
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+
+    PhaseInput:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+          minLength: 1
+        color:
+          type: string
+        startDate:
+          type: ["string", "null"]
+        endDate:
+          type: ["string", "null"]
+        assignedUserIds:
+          type: array
+          items:
+            type: integer
+
+    ScheduleJob:
+      type: object
+      required: [id, title, stage, phases]
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        stage:
+          type: string
+        clientName:
+          type: ["string", "null"]
+        scheduledStart:
+          type: ["string", "null"]
+        scheduledEnd:
+          type: ["string", "null"]
+        siteAddress:
+          type: ["string", "null"]
+        phases:
+          type: array
+          items:
+            $ref: "#/components/schemas/JobPhase"
+
+    # Notifications
+    Notification:
+      type: object
+      required: [id, type, message, isRead, createdAt]
+      properties:
+        id:
+          type: integer
+        userId:
+          type: ["integer", "null"]
+        type:
+          type: string
+        message:
+          type: string
+        jobId:
+          type: ["integer", "null"]
+        isRead:
+          type: boolean
+        createdAt:
           type: string
 
     # Dashboard

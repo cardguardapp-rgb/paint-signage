@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
-import { eq, and } from "drizzle-orm";
-import { db, jobsTable, clientsTable, usersTable, activityTable } from "@workspace/db";
+import { eq, and, inArray } from "drizzle-orm";
+import { db, jobsTable, clientsTable, usersTable, activityTable, notificationsTable } from "@workspace/db";
 import { STAGE_ORDER, NEXT_STAGE, REQUIRES_APPROVED_ESTIMATE_BEFORE } from "@workspace/db";
 import {
   ListJobsQueryParams,
@@ -222,6 +222,28 @@ router.post("/jobs/:id/advance-stage", async (req, res): Promise<void> => {
     action: `Advanced to ${nextStage}`,
     stage: nextStage,
   });
+
+  // Notify Field Crew + assigned user when a job enters Scheduled or InProgress
+  if (nextStage === "Scheduled" || nextStage === "InProgress") {
+    const crewUsers = await db
+      .select({ id: usersTable.id })
+      .from(usersTable)
+      .where(eq(usersTable.role, "FieldCrew"));
+    const notifyIds = new Set<number>(crewUsers.map((u) => u.id));
+    if (updated.assignedToId) notifyIds.add(updated.assignedToId);
+    if (notifyIds.size > 0) {
+      await Promise.all(
+        Array.from(notifyIds).map((userId) =>
+          db.insert(notificationsTable).values({
+            userId,
+            type: "job_scheduled",
+            message: `Job "${updated.title}" has been moved to ${nextStage}`,
+            jobId: updated.id,
+          })
+        )
+      );
+    }
+  }
 
   res.json(await enrichJob(updated));
 });

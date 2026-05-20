@@ -1,5 +1,6 @@
 import { Link, useLocation } from "wouter";
-import { LayoutDashboard, Briefcase, Users, Building2, Paintbrush } from "lucide-react";
+import { LayoutDashboard, Briefcase, Users, Building2, Paintbrush, CalendarDays } from "lucide-react";
+import { NotificationBell } from "./notification-bell";
 
 export function Shell({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
@@ -7,6 +8,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
   const navigation = [
     { name: "Dashboard", href: "/", icon: LayoutDashboard },
     { name: "Jobs", href: "/jobs", icon: Briefcase },
+    { name: "Schedule", href: "/schedule", icon: CalendarDays },
     { name: "Clients", href: "/clients", icon: Building2 },
     { name: "Users", href: "/users", icon: Users },
   ];
@@ -18,13 +20,15 @@ export function Shell({ children }: { children: React.ReactNode }) {
           <div className="flex h-14 items-center border-b px-4 lg:h-[60px] lg:px-6">
             <Link href="/" className="flex items-center gap-2 font-semibold">
               <Paintbrush className="h-6 w-6 text-primary" />
-              <span className="">ProSignage</span>
+              <span>ProSignage</span>
             </Link>
           </div>
           <div className="flex-1 overflow-auto py-2">
             <nav className="grid items-start px-2 text-sm font-medium lg:px-4 space-y-1">
               {navigation.map((item) => {
-                const isActive = location === item.href || (item.href !== "/" && location.startsWith(item.href));
+                const isActive =
+                  location === item.href ||
+                  (item.href !== "/" && location.startsWith(item.href));
                 return (
                   <Link
                     key={item.name}
@@ -44,7 +48,12 @@ export function Shell({ children }: { children: React.ReactNode }) {
           </div>
         </div>
       </div>
+
       <div className="flex flex-col flex-1 min-w-0">
+        {/* Top bar with notification bell */}
+        <header className="flex h-14 items-center justify-end border-b bg-card px-4 lg:px-6 shrink-0">
+          <NotificationBell />
+        </header>
         <main className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6">
           {children}
         </main>
