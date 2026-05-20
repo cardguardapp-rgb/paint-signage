@@ -757,6 +757,133 @@ paths:
                   updated:
                     type: integer
 
+  # SWMS / Safety Forms
+  /jobs/{jobId}/swms:
+    get:
+      operationId: listSwmsForms
+      tags: [swms]
+      summary: List SWMS forms for a job
+      parameters:
+        - name: jobId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of SWMS forms
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SwmsForm"
+    post:
+      operationId: createSwmsForm
+      tags: [swms]
+      summary: Create a new SWMS form for a job
+      parameters:
+        - name: jobId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateSwmsBody"
+      responses:
+        "201":
+          description: Created SWMS form
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SwmsFormDetail"
+
+  /jobs/{jobId}/swms/{swmsId}:
+    get:
+      operationId: getSwmsForm
+      tags: [swms]
+      summary: Get a SWMS form with signatures
+      parameters:
+        - name: jobId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: swmsId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: SWMS form with signatures
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SwmsFormDetail"
+    put:
+      operationId: updateSwmsForm
+      tags: [swms]
+      summary: Update hazards in a SWMS form
+      parameters:
+        - name: jobId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: swmsId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateSwmsBody"
+      responses:
+        "200":
+          description: Updated SWMS form
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SwmsFormDetail"
+
+  /jobs/{jobId}/swms/{swmsId}/sign:
+    post:
+      operationId: signSwmsForm
+      tags: [swms]
+      summary: Sign off on a SWMS form
+      parameters:
+        - name: jobId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: swmsId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SignSwmsBody"
+      responses:
+        "200":
+          description: SWMS form after signing
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SwmsFormDetail"
+
   # Dashboard
   /dashboard/summary:
     get:
@@ -973,6 +1100,9 @@ components:
           type: ["string", "null"]
         hasApprovedEstimate:
           type: boolean
+        swmsStatus:
+          type: string
+          enum: [NoSwms, PendingSignatures, Compliant]
         createdAt:
           type: string
         updatedAt:
@@ -1314,3 +1444,117 @@ components:
           type: string
         timestamp:
           type: string
+
+    # SWMS / Safety Forms
+    SwmsHazard:
+      type: object
+      required: [key, label, isSelected, severity, controlMeasure]
+      properties:
+        key:
+          type: string
+        label:
+          type: string
+        isSelected:
+          type: boolean
+        severity:
+          type: string
+          enum: [Low, Medium, High]
+        controlMeasure:
+          type: string
+
+    SwmsSignature:
+      type: object
+      required: [id, swmsFormId, signerName, signedAt]
+      properties:
+        id:
+          type: integer
+        swmsFormId:
+          type: integer
+        userId:
+          type: ["integer", "null"]
+        signerName:
+          type: string
+        signedAt:
+          type: string
+
+    SwmsForm:
+      type: object
+      required: [id, jobId, templateType, title, hazards, status, signatureCount, createdAt]
+      properties:
+        id:
+          type: integer
+        jobId:
+          type: integer
+        templateType:
+          type: string
+        title:
+          type: string
+        hazards:
+          type: array
+          items:
+            $ref: "#/components/schemas/SwmsHazard"
+        status:
+          type: string
+          enum: [PendingSignatures, Compliant]
+        signatureCount:
+          type: integer
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+
+    SwmsFormDetail:
+      type: object
+      required: [id, jobId, templateType, title, hazards, status, signatures, createdAt]
+      properties:
+        id:
+          type: integer
+        jobId:
+          type: integer
+        templateType:
+          type: string
+        title:
+          type: string
+        hazards:
+          type: array
+          items:
+            $ref: "#/components/schemas/SwmsHazard"
+        status:
+          type: string
+          enum: [PendingSignatures, Compliant]
+        signatures:
+          type: array
+          items:
+            $ref: "#/components/schemas/SwmsSignature"
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+
+    CreateSwmsBody:
+      type: object
+      required: [title]
+      properties:
+        templateType:
+          type: string
+          enum: [SWMS, JSA]
+        title:
+          type: string
+
+    UpdateSwmsBody:
+      type: object
+      required: [hazards]
+      properties:
+        hazards:
+          type: array
+          items:
+            $ref: "#/components/schemas/SwmsHazard"
+
+    SignSwmsBody:
+      type: object
+      required: [signerName]
+      properties:
+        signerName:
+          type: string
+        userId:
+          type: integer

@@ -24,6 +24,7 @@ import type {
   Client,
   ClientInput,
   ClientPatch,
+  CreateSwmsBody,
   CustomerQuoteView,
   DashboardSummary,
   Estimate,
@@ -44,6 +45,10 @@ import type {
   QuoteResponse,
   ScheduleJob,
   ShareResult,
+  SignSwmsBody,
+  SwmsForm,
+  SwmsFormDetail,
+  UpdateSwmsBody,
   User,
   UserInput,
   UserPatch
@@ -2581,6 +2586,385 @@ export const useMarkAllNotificationsRead = <TError = ErrorType<unknown>,
         TContext
       > => {
       return useMutation(getMarkAllNotificationsReadMutationOptions(options));
+    }
+
+export const getListSwmsFormsUrl = (jobId: number,) => {
+
+
+
+
+  return `/api/jobs/${jobId}/swms`
+}
+
+/**
+ * @summary List SWMS forms for a job
+ */
+export const listSwmsForms = async (jobId: number, options?: RequestInit): Promise<SwmsForm[]> => {
+
+  return customFetch<SwmsForm[]>(getListSwmsFormsUrl(jobId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListSwmsFormsQueryKey = (jobId: number,) => {
+    return [
+    `/api/jobs/${jobId}/swms`
+    ] as const;
+    }
+
+
+export const getListSwmsFormsQueryOptions = <TData = Awaited<ReturnType<typeof listSwmsForms>>, TError = ErrorType<unknown>>(jobId: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listSwmsForms>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListSwmsFormsQueryKey(jobId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listSwmsForms>>> = ({ signal }) => listSwmsForms(jobId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(jobId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listSwmsForms>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListSwmsFormsQueryResult = NonNullable<Awaited<ReturnType<typeof listSwmsForms>>>
+export type ListSwmsFormsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List SWMS forms for a job
+ */
+
+export function useListSwmsForms<TData = Awaited<ReturnType<typeof listSwmsForms>>, TError = ErrorType<unknown>>(
+ jobId: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listSwmsForms>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListSwmsFormsQueryOptions(jobId,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getCreateSwmsFormUrl = (jobId: number,) => {
+
+
+
+
+  return `/api/jobs/${jobId}/swms`
+}
+
+/**
+ * @summary Create a new SWMS form for a job
+ */
+export const createSwmsForm = async (jobId: number,
+    createSwmsBody: CreateSwmsBody, options?: RequestInit): Promise<SwmsFormDetail> => {
+
+  return customFetch<SwmsFormDetail>(getCreateSwmsFormUrl(jobId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      createSwmsBody,)
+  }
+);}
+
+
+
+
+export const getCreateSwmsFormMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createSwmsForm>>, TError,{jobId: number;data: BodyType<CreateSwmsBody>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createSwmsForm>>, TError,{jobId: number;data: BodyType<CreateSwmsBody>}, TContext> => {
+
+const mutationKey = ['createSwmsForm'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createSwmsForm>>, {jobId: number;data: BodyType<CreateSwmsBody>}> = (props) => {
+          const {jobId,data} = props ?? {};
+
+          return  createSwmsForm(jobId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateSwmsFormMutationResult = NonNullable<Awaited<ReturnType<typeof createSwmsForm>>>
+    export type CreateSwmsFormMutationBody = BodyType<CreateSwmsBody>
+    export type CreateSwmsFormMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Create a new SWMS form for a job
+ */
+export const useCreateSwmsForm = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createSwmsForm>>, TError,{jobId: number;data: BodyType<CreateSwmsBody>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createSwmsForm>>,
+        TError,
+        {jobId: number;data: BodyType<CreateSwmsBody>},
+        TContext
+      > => {
+      return useMutation(getCreateSwmsFormMutationOptions(options));
+    }
+
+export const getGetSwmsFormUrl = (jobId: number,
+    swmsId: number,) => {
+
+
+
+
+  return `/api/jobs/${jobId}/swms/${swmsId}`
+}
+
+/**
+ * @summary Get a SWMS form with signatures
+ */
+export const getSwmsForm = async (jobId: number,
+    swmsId: number, options?: RequestInit): Promise<SwmsFormDetail> => {
+
+  return customFetch<SwmsFormDetail>(getGetSwmsFormUrl(jobId,swmsId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetSwmsFormQueryKey = (jobId: number,
+    swmsId: number,) => {
+    return [
+    `/api/jobs/${jobId}/swms/${swmsId}`
+    ] as const;
+    }
+
+
+export const getGetSwmsFormQueryOptions = <TData = Awaited<ReturnType<typeof getSwmsForm>>, TError = ErrorType<unknown>>(jobId: number,
+    swmsId: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getSwmsForm>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetSwmsFormQueryKey(jobId,swmsId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getSwmsForm>>> = ({ signal }) => getSwmsForm(jobId,swmsId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(jobId && swmsId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getSwmsForm>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetSwmsFormQueryResult = NonNullable<Awaited<ReturnType<typeof getSwmsForm>>>
+export type GetSwmsFormQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get a SWMS form with signatures
+ */
+
+export function useGetSwmsForm<TData = Awaited<ReturnType<typeof getSwmsForm>>, TError = ErrorType<unknown>>(
+ jobId: number,
+    swmsId: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getSwmsForm>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetSwmsFormQueryOptions(jobId,swmsId,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getUpdateSwmsFormUrl = (jobId: number,
+    swmsId: number,) => {
+
+
+
+
+  return `/api/jobs/${jobId}/swms/${swmsId}`
+}
+
+/**
+ * @summary Update hazards in a SWMS form
+ */
+export const updateSwmsForm = async (jobId: number,
+    swmsId: number,
+    updateSwmsBody: UpdateSwmsBody, options?: RequestInit): Promise<SwmsFormDetail> => {
+
+  return customFetch<SwmsFormDetail>(getUpdateSwmsFormUrl(jobId,swmsId),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      updateSwmsBody,)
+  }
+);}
+
+
+
+
+export const getUpdateSwmsFormMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateSwmsForm>>, TError,{jobId: number;swmsId: number;data: BodyType<UpdateSwmsBody>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateSwmsForm>>, TError,{jobId: number;swmsId: number;data: BodyType<UpdateSwmsBody>}, TContext> => {
+
+const mutationKey = ['updateSwmsForm'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateSwmsForm>>, {jobId: number;swmsId: number;data: BodyType<UpdateSwmsBody>}> = (props) => {
+          const {jobId,swmsId,data} = props ?? {};
+
+          return  updateSwmsForm(jobId,swmsId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateSwmsFormMutationResult = NonNullable<Awaited<ReturnType<typeof updateSwmsForm>>>
+    export type UpdateSwmsFormMutationBody = BodyType<UpdateSwmsBody>
+    export type UpdateSwmsFormMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Update hazards in a SWMS form
+ */
+export const useUpdateSwmsForm = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateSwmsForm>>, TError,{jobId: number;swmsId: number;data: BodyType<UpdateSwmsBody>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateSwmsForm>>,
+        TError,
+        {jobId: number;swmsId: number;data: BodyType<UpdateSwmsBody>},
+        TContext
+      > => {
+      return useMutation(getUpdateSwmsFormMutationOptions(options));
+    }
+
+export const getSignSwmsFormUrl = (jobId: number,
+    swmsId: number,) => {
+
+
+
+
+  return `/api/jobs/${jobId}/swms/${swmsId}/sign`
+}
+
+/**
+ * @summary Sign off on a SWMS form
+ */
+export const signSwmsForm = async (jobId: number,
+    swmsId: number,
+    signSwmsBody: SignSwmsBody, options?: RequestInit): Promise<SwmsFormDetail> => {
+
+  return customFetch<SwmsFormDetail>(getSignSwmsFormUrl(jobId,swmsId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      signSwmsBody,)
+  }
+);}
+
+
+
+
+export const getSignSwmsFormMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof signSwmsForm>>, TError,{jobId: number;swmsId: number;data: BodyType<SignSwmsBody>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof signSwmsForm>>, TError,{jobId: number;swmsId: number;data: BodyType<SignSwmsBody>}, TContext> => {
+
+const mutationKey = ['signSwmsForm'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof signSwmsForm>>, {jobId: number;swmsId: number;data: BodyType<SignSwmsBody>}> = (props) => {
+          const {jobId,swmsId,data} = props ?? {};
+
+          return  signSwmsForm(jobId,swmsId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SignSwmsFormMutationResult = NonNullable<Awaited<ReturnType<typeof signSwmsForm>>>
+    export type SignSwmsFormMutationBody = BodyType<SignSwmsBody>
+    export type SignSwmsFormMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Sign off on a SWMS form
+ */
+export const useSignSwmsForm = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof signSwmsForm>>, TError,{jobId: number;swmsId: number;data: BodyType<SignSwmsBody>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof signSwmsForm>>,
+        TError,
+        {jobId: number;swmsId: number;data: BodyType<SignSwmsBody>},
+        TContext
+      > => {
+      return useMutation(getSignSwmsFormMutationOptions(options));
     }
 
 export const getGetDashboardSummaryUrl = () => {

@@ -40,6 +40,20 @@ A specialized job management system for paint and signage contractors — tracki
 - **Activity log**: every stage change and key event is recorded in the `activity` table, powering the recent activity feed on the dashboard
 - **Margins computed server-side**: `computeEstimateTotals()` in `lib/db/src/schema/estimates.ts` calculates `internalCost`, `customerTotal`, `margin`, and `marginStatus` (Healthy ≥25%, Warning ≥15%, Critical <15%) from line items + markup percentage
 
+## Compliance & Safety (SWMS/JSA Module)
+
+Added as a gate before advancing to InProgress:
+- **DB tables**: `swms_forms` (id, jobId, templateType, title, hazards JSON, status), `swms_signatures` (id, swmsFormId, userId, signerName)
+- **API routes**: `GET/POST /api/jobs/:jobId/swms`, `GET/PUT /api/jobs/:jobId/swms/:swmsId`, `POST /api/jobs/:jobId/swms/:swmsId/sign`
+- **Server gate**: `POST /api/jobs/:id/advance-stage` blocks `InProgress` if no SWMS form or no Compliant form
+- **swmsStatus** field added to all Job API responses: `NoSwms | PendingSignatures | Compliant`
+- **Frontend**: Create SWMS page at `/jobs/:id/swms/new`, Form editor at `/jobs/:id/swms/:swmsId` (two tabs: Hazards & Controls + Sign Off)
+- **Safety badge** on dashboard pipeline cards (Approved/Scheduled/InProgress): Red=NoSwms, Orange=PendingSignatures, Green=Compliant
+- **Safety & Compliance card** on job detail sidebar with status badge and form list
+
+### 10 pre-loaded hazards (SWMS/JSA templates)
+Working at Heights, Chemical/Solvent Exposure, Electrical Hazards, Manual Handling, Slips/Trips/Falls, Traffic Management, UV/Heat Exposure, Noise, Eye/Skin Injuries, Confined Spaces — all with industry-standard control measures.
+
 ## Product
 
 - Dashboard with Kanban board of all jobs by stage, KPI summary cards, and recent activity feed

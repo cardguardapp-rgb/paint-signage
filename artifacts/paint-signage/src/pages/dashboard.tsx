@@ -1,10 +1,34 @@
 import { useGetDashboardSummary, useGetPipelineStats, useGetRecentActivity, useListJobs, getGetDashboardSummaryQueryKey, getGetPipelineStatsQueryKey, getGetRecentActivityQueryKey, getListJobsQueryKey } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Briefcase, CircleDollarSign, AlertCircle, CheckCircle2, ArrowRight } from "lucide-react";
+import { Briefcase, CircleDollarSign, AlertCircle, CheckCircle2, ShieldCheck, Shield, ShieldAlert } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Link } from "wouter";
+
+const SAFETY_STAGES = new Set(["Approved", "Scheduled", "InProgress"]);
+
+function SafetyBadge({ status }: { status?: string }) {
+  if (status === "Compliant") {
+    return (
+      <span className="flex items-center gap-0.5 text-[10px] font-semibold text-green-700 bg-green-100 border border-green-200 px-1.5 py-0.5 rounded">
+        <ShieldCheck className="h-2.5 w-2.5" /> Compliant
+      </span>
+    );
+  }
+  if (status === "PendingSignatures") {
+    return (
+      <span className="flex items-center gap-0.5 text-[10px] font-semibold text-orange-700 bg-orange-100 border border-orange-200 px-1.5 py-0.5 rounded">
+        <Shield className="h-2.5 w-2.5" /> Pending Sign
+      </span>
+    );
+  }
+  return (
+    <span className="flex items-center gap-0.5 text-[10px] font-semibold text-red-700 bg-red-100 border border-red-200 px-1.5 py-0.5 rounded">
+      <ShieldAlert className="h-2.5 w-2.5" /> No SWMS
+    </span>
+  );
+}
 
 const stages = ["Lead", "Quoting", "Approved", "Scheduled", "InProgress", "ComplianceReview", "Invoiced", "Closed"];
 
@@ -82,10 +106,13 @@ export default function Dashboard() {
                               <CardContent className="p-3 space-y-2">
                                 <div className="font-medium text-sm line-clamp-2 leading-tight">{job.title}</div>
                                 <div className="text-xs text-muted-foreground truncate">{job.clientName}</div>
-                                <div className="flex justify-between items-center pt-2">
+                                <div className="flex justify-between items-center pt-2 gap-1 flex-wrap">
                                   <Badge variant="outline" className="text-[10px] bg-background">
                                     ${job.estimatedValue?.toLocaleString() || '0'}
                                   </Badge>
+                                  {SAFETY_STAGES.has(job.stage) && (
+                                    <SafetyBadge status={job.swmsStatus} />
+                                  )}
                                 </div>
                               </CardContent>
                             </Card>

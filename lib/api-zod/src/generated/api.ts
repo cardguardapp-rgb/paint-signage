@@ -230,6 +230,7 @@ export const ListJobsResponseItem = zod.object({
   "siteAddress": zod.string().nullish(),
   "notes": zod.string().nullish(),
   "hasApprovedEstimate": zod.boolean().optional(),
+  "swmsStatus": zod.enum(['NoSwms', 'PendingSignatures', 'Compliant']).optional(),
   "createdAt": zod.string(),
   "updatedAt": zod.string().optional()
 })
@@ -276,6 +277,7 @@ export const GetJobResponse = zod.object({
   "siteAddress": zod.string().nullish(),
   "notes": zod.string().nullish(),
   "hasApprovedEstimate": zod.boolean().optional(),
+  "swmsStatus": zod.enum(['NoSwms', 'PendingSignatures', 'Compliant']).optional(),
   "createdAt": zod.string(),
   "updatedAt": zod.string().optional()
 })
@@ -315,6 +317,7 @@ export const UpdateJobResponse = zod.object({
   "siteAddress": zod.string().nullish(),
   "notes": zod.string().nullish(),
   "hasApprovedEstimate": zod.boolean().optional(),
+  "swmsStatus": zod.enum(['NoSwms', 'PendingSignatures', 'Compliant']).optional(),
   "createdAt": zod.string(),
   "updatedAt": zod.string().optional()
 })
@@ -350,6 +353,7 @@ export const AdvanceJobStageResponse = zod.object({
   "siteAddress": zod.string().nullish(),
   "notes": zod.string().nullish(),
   "hasApprovedEstimate": zod.boolean().optional(),
+  "swmsStatus": zod.enum(['NoSwms', 'PendingSignatures', 'Compliant']).optional(),
   "createdAt": zod.string(),
   "updatedAt": zod.string().optional()
 })
@@ -882,6 +886,160 @@ export const MarkAllNotificationsReadBody = zod.object({
 
 export const MarkAllNotificationsReadResponse = zod.object({
   "updated": zod.number()
+})
+
+
+/**
+ * @summary List SWMS forms for a job
+ */
+export const ListSwmsFormsParams = zod.object({
+  "jobId": zod.coerce.number()
+})
+
+export const ListSwmsFormsResponseItem = zod.object({
+  "id": zod.number(),
+  "jobId": zod.number(),
+  "templateType": zod.string(),
+  "title": zod.string(),
+  "hazards": zod.array(zod.object({
+  "key": zod.string(),
+  "label": zod.string(),
+  "isSelected": zod.boolean(),
+  "severity": zod.enum(['Low', 'Medium', 'High']),
+  "controlMeasure": zod.string()
+})),
+  "status": zod.enum(['PendingSignatures', 'Compliant']),
+  "signatureCount": zod.number(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string().optional()
+})
+export const ListSwmsFormsResponse = zod.array(ListSwmsFormsResponseItem)
+
+
+/**
+ * @summary Create a new SWMS form for a job
+ */
+export const CreateSwmsFormParams = zod.object({
+  "jobId": zod.coerce.number()
+})
+
+export const CreateSwmsFormBody = zod.object({
+  "templateType": zod.enum(['SWMS', 'JSA']).optional(),
+  "title": zod.string()
+})
+
+
+/**
+ * @summary Get a SWMS form with signatures
+ */
+export const GetSwmsFormParams = zod.object({
+  "jobId": zod.coerce.number(),
+  "swmsId": zod.coerce.number()
+})
+
+export const GetSwmsFormResponse = zod.object({
+  "id": zod.number(),
+  "jobId": zod.number(),
+  "templateType": zod.string(),
+  "title": zod.string(),
+  "hazards": zod.array(zod.object({
+  "key": zod.string(),
+  "label": zod.string(),
+  "isSelected": zod.boolean(),
+  "severity": zod.enum(['Low', 'Medium', 'High']),
+  "controlMeasure": zod.string()
+})),
+  "status": zod.enum(['PendingSignatures', 'Compliant']),
+  "signatures": zod.array(zod.object({
+  "id": zod.number(),
+  "swmsFormId": zod.number(),
+  "userId": zod.number().nullish(),
+  "signerName": zod.string(),
+  "signedAt": zod.string()
+})),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string().optional()
+})
+
+
+/**
+ * @summary Update hazards in a SWMS form
+ */
+export const UpdateSwmsFormParams = zod.object({
+  "jobId": zod.coerce.number(),
+  "swmsId": zod.coerce.number()
+})
+
+export const UpdateSwmsFormBody = zod.object({
+  "hazards": zod.array(zod.object({
+  "key": zod.string(),
+  "label": zod.string(),
+  "isSelected": zod.boolean(),
+  "severity": zod.enum(['Low', 'Medium', 'High']),
+  "controlMeasure": zod.string()
+}))
+})
+
+export const UpdateSwmsFormResponse = zod.object({
+  "id": zod.number(),
+  "jobId": zod.number(),
+  "templateType": zod.string(),
+  "title": zod.string(),
+  "hazards": zod.array(zod.object({
+  "key": zod.string(),
+  "label": zod.string(),
+  "isSelected": zod.boolean(),
+  "severity": zod.enum(['Low', 'Medium', 'High']),
+  "controlMeasure": zod.string()
+})),
+  "status": zod.enum(['PendingSignatures', 'Compliant']),
+  "signatures": zod.array(zod.object({
+  "id": zod.number(),
+  "swmsFormId": zod.number(),
+  "userId": zod.number().nullish(),
+  "signerName": zod.string(),
+  "signedAt": zod.string()
+})),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string().optional()
+})
+
+
+/**
+ * @summary Sign off on a SWMS form
+ */
+export const SignSwmsFormParams = zod.object({
+  "jobId": zod.coerce.number(),
+  "swmsId": zod.coerce.number()
+})
+
+export const SignSwmsFormBody = zod.object({
+  "signerName": zod.string(),
+  "userId": zod.number().optional()
+})
+
+export const SignSwmsFormResponse = zod.object({
+  "id": zod.number(),
+  "jobId": zod.number(),
+  "templateType": zod.string(),
+  "title": zod.string(),
+  "hazards": zod.array(zod.object({
+  "key": zod.string(),
+  "label": zod.string(),
+  "isSelected": zod.boolean(),
+  "severity": zod.enum(['Low', 'Medium', 'High']),
+  "controlMeasure": zod.string()
+})),
+  "status": zod.enum(['PendingSignatures', 'Compliant']),
+  "signatures": zod.array(zod.object({
+  "id": zod.number(),
+  "swmsFormId": zod.number(),
+  "userId": zod.number().nullish(),
+  "signerName": zod.string(),
+  "signedAt": zod.string()
+})),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string().optional()
 })
 
 

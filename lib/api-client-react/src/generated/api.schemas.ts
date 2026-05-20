@@ -129,6 +129,15 @@ export const JobStage = {
   Closed: 'Closed',
 } as const;
 
+export type JobSwmsStatus = typeof JobSwmsStatus[keyof typeof JobSwmsStatus];
+
+
+export const JobSwmsStatus = {
+  NoSwms: 'NoSwms',
+  PendingSignatures: 'PendingSignatures',
+  Compliant: 'Compliant',
+} as const;
+
 export interface Job {
   id: number;
   title: string;
@@ -154,6 +163,7 @@ export interface Job {
   /** @nullable */
   notes?: string | null;
   hasApprovedEstimate?: boolean;
+  swmsStatus?: JobSwmsStatus;
   createdAt: string;
   updatedAt?: string;
 }
@@ -405,6 +415,94 @@ export interface ActivityItem {
   action: string;
   stage?: string;
   timestamp: string;
+}
+
+export type SwmsHazardSeverity = typeof SwmsHazardSeverity[keyof typeof SwmsHazardSeverity];
+
+
+export const SwmsHazardSeverity = {
+  Low: 'Low',
+  Medium: 'Medium',
+  High: 'High',
+} as const;
+
+export interface SwmsHazard {
+  key: string;
+  label: string;
+  isSelected: boolean;
+  severity: SwmsHazardSeverity;
+  controlMeasure: string;
+}
+
+export interface SwmsSignature {
+  id: number;
+  swmsFormId: number;
+  /** @nullable */
+  userId?: number | null;
+  signerName: string;
+  signedAt: string;
+}
+
+export type SwmsFormStatus = typeof SwmsFormStatus[keyof typeof SwmsFormStatus];
+
+
+export const SwmsFormStatus = {
+  PendingSignatures: 'PendingSignatures',
+  Compliant: 'Compliant',
+} as const;
+
+export interface SwmsForm {
+  id: number;
+  jobId: number;
+  templateType: string;
+  title: string;
+  hazards: SwmsHazard[];
+  status: SwmsFormStatus;
+  signatureCount: number;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export type SwmsFormDetailStatus = typeof SwmsFormDetailStatus[keyof typeof SwmsFormDetailStatus];
+
+
+export const SwmsFormDetailStatus = {
+  PendingSignatures: 'PendingSignatures',
+  Compliant: 'Compliant',
+} as const;
+
+export interface SwmsFormDetail {
+  id: number;
+  jobId: number;
+  templateType: string;
+  title: string;
+  hazards: SwmsHazard[];
+  status: SwmsFormDetailStatus;
+  signatures: SwmsSignature[];
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export type CreateSwmsBodyTemplateType = typeof CreateSwmsBodyTemplateType[keyof typeof CreateSwmsBodyTemplateType];
+
+
+export const CreateSwmsBodyTemplateType = {
+  SWMS: 'SWMS',
+  JSA: 'JSA',
+} as const;
+
+export interface CreateSwmsBody {
+  templateType?: CreateSwmsBodyTemplateType;
+  title: string;
+}
+
+export interface UpdateSwmsBody {
+  hazards: SwmsHazard[];
+}
+
+export interface SignSwmsBody {
+  signerName: string;
+  userId?: number;
 }
 
 export type ListJobsParams = {

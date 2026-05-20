@@ -5,16 +5,18 @@ import {
   useGetJob, 
   useAdvanceJobStage, 
   useListEstimates, 
-  useApproveEstimate, 
+  useApproveEstimate,
+  useListSwmsForms,
   getGetJobQueryKey, 
-  getListEstimatesQueryKey 
+  getListEstimatesQueryKey,
+  getListSwmsFormsQueryKey,
 } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowRight, CheckCircle2, Clock, MapPin, AlignLeft, Calculator, Plus, Link as LinkIcon, Edit2, MessageSquareWarning } from "lucide-react";
+import { ArrowRight, CheckCircle2, Clock, MapPin, AlignLeft, Calculator, Plus, Link as LinkIcon, Edit2, MessageSquareWarning, ShieldCheck, Shield, ShieldAlert } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 const stageOrder = ["Lead", "Quoting", "Approved", "Scheduled", "InProgress", "ComplianceReview", "Invoiced", "Closed"];
@@ -31,6 +33,10 @@ export default function JobDetail() {
   const advanceStage = useAdvanceJobStage();
   const approveEstimate = useApproveEstimate();
 
+  const { data: swmsForms = [] } = useListSwmsForms(id, {
+    query: { enabled: !!id, queryKey: getListSwmsFormsQueryKey(id) },
+  });
+
   if (loadingJob) return <Skeleton className="h-[600px] w-full" />;
   if (!job) return <div className="text-center p-12 text-lg text-muted-foreground">Job not found</div>;
 
@@ -44,9 +50,15 @@ export default function JobDetail() {
         toast({ title: "Job stage advanced" });
         queryClient.invalidateQueries({ queryKey: getGetJobQueryKey(id) });
       },
-      onError: () => {
-        toast({ title: "Failed to advance stage", variant: "destructive" });
-      }
+      onError: (err: unknown) => {
+        const msg =
+          (err as { response?: { data?: { error?: string } } })?.response?.data?.error;
+        toast({
+          title: "Cannot advance stage",
+          description: msg ?? "An unexpected error occurred.",
+          variant: "destructive",
+        });
+      },
     });
   };
 
@@ -236,6 +248,73 @@ export default function JobDetail() {
         </div>
 
         <div className="space-y-6">
+          {/* Safety & Compliance */}
+          <Card>
+            <CardHeader className="border-b bg-muted/20 pb-4 flex flex-row items-center justify-between">
+              <CardTitle className="flex items-center gap-2">
+                <ShieldCheck className="h-5 w-5" /> Safety &amp; Compliance
+              </CardTitle>
+              <Button size="sm" variant="outline" className="shadow-sm" asChild>
+                <Link href={`/jobs/${job.id}/swms/new`}>
+                  <Plus className="h-4 w-4 mr-1" /> New SWMS
+                </Link>
+              </Button>
+            </CardHeader>
+            <CardContent className="pt-4 space-y-3">
+              {/* Overall safety badge */}
+              <div className="flex items-center gap-2">
+                {job.swmsStatus === "Compliant" ? (
+                  <Badge className="bg-green-600 hover:bg-green-700 gap-1.5 text-sm px-3 py-1">
+                    <ShieldCheck className="h-4 w-4" /> Compliant
+                  </Badge>
+                ) : job.swmsStatus === "PendingSignatures" ? (
+                  <Badge className="bg-orange-500 hover:bg-orange-600 gap-1.5 text-sm px-3 py-1">
+                    <Shield className="h-4 w-4" /> Pending Signatures
+                  </Badge>
+                ) : (
+                  <Badge variant="destructive" className="gap-1.5 text-sm px-3 py-1">
+                    <ShieldAlert className="h-4 w-4" /> No SWMS Created
+                  </Badge>
+                )}
+              </div>
+
+              {nextStage === "InProgress" && job.swmsStatus !== "Compliant" && (
+                <div className="flex items-start gap-2 text-sm p-3 bg-orange-50 border border-orange-200 rounded-lg">
+                  <ShieldAlert className="h-4 w-4 text-orange-600 shrink-0 mt-0.5" />
+                  <span className="text-orange-900">
+                    {job.swmsStatus === "NoSwms"
+                      ? "A safety form must be created and signed before advancing to InProgress."
+                      : "The safety form must be signed before advancing to InProgress."}
+                  </span>
+                </div>
+              )}
+
+              {swmsForms.length === 0 ? (
+                <p className="text-sm text-muted-foreground italic">No safety forms created yet.</p>
+              ) : (
+                <div className="space-y-2">
+                  {swmsForms.map((f) => (
+                    <Link href={`/jobs/${job.id}/swms/${f.id}`} key={f.id}>
+                      <div className="flex items-center justify-between p-3 rounded-lg border hover:border-primary/50 hover:bg-muted/30 transition-colors cursor-pointer">
+                        <div>
+                          <p className="font-medium text-sm">{f.title}</p>
+                          <p className="text-xs text-muted-foreground mt-0.5">
+                            {f.templateType} · {f.signatureCount} signature{f.signatureCount !== 1 ? "s" : ""}
+                          </p>
+                        </div>
+                        {f.status === "Compliant" ? (
+                          <CheckCircle2 className="h-5 w-5 text-green-600 shrink-0" />
+                        ) : (
+                          <Shield className="h-5 w-5 text-orange-500 shrink-0" />
+                        )}
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
           <Card>
             <CardHeader className="border-b bg-muted/20 pb-4">
               <CardTitle>Schedule</CardTitle>

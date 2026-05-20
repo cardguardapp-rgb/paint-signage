@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
 import { eq, and, inArray } from "drizzle-orm";
-import { db, jobsTable, clientsTable, usersTable, activityTable, notificationsTable } from "@workspace/db";
+import { db, jobsTable, clientsTable, usersTable, activityTable, notificationsTable, swmsFormsTable, swmsSignaturesTable } from "@workspace/db";
 import { STAGE_ORDER, NEXT_STAGE, REQUIRES_APPROVED_ESTIMATE_BEFORE } from "@workspace/db";
 import {
   ListJobsQueryParams,
@@ -29,11 +29,24 @@ async function enrichJob(job: typeof jobsTable.$inferSelect) {
     assignedToName = user?.name ?? null;
   }
 
+  // Compute SWMS status
+  const swmsForms = await db
+    .select({ id: swmsFormsTable.id, status: swmsFormsTable.status })
+    .from(swmsFormsTable)
+    .where(eq(swmsFormsTable.jobId, job.id));
+  let swmsStatus: "NoSwms" | "PendingSignatures" | "Compliant" = "NoSwms";
+  if (swmsForms.length > 0) {
+    swmsStatus = swmsForms.some((f) => f.status === "Compliant")
+      ? "Compliant"
+      : "PendingSignatures";
+  }
+
   return {
     ...job,
     estimatedValue: job.estimatedValue ? Number(job.estimatedValue) : null,
     clientName,
     assignedToName,
+    swmsStatus,
     scheduledStart: job.scheduledStart?.toISOString() ?? null,
     scheduledEnd: job.scheduledEnd?.toISOString() ?? null,
     createdAt: job.createdAt.toISOString(),
@@ -209,6 +222,29 @@ router.post("/jobs/:id/advance-stage", async (req, res): Promise<void> => {
       error: `An approved estimate is required before advancing to '${nextStage}'. Please approve a quote first.`,
     });
     return;
+  }
+
+  // Safety gate: require a signed SWMS before advancing to InProgress
+  if (nextStage === "InProgress") {
+    const forms = await db
+      .select({ id: swmsFormsTable.id, status: swmsFormsTable.status })
+      .from(swmsFormsTable)
+      .where(eq(swmsFormsTable.jobId, job.id));
+    if (forms.length === 0) {
+      res.status(400).json({
+        error:
+          "A signed SWMS/JSA safety form is required before advancing to InProgress. Please create and sign a safety form on the job page.",
+      });
+      return;
+    }
+    const hasCompliant = forms.some((f) => f.status === "Compliant");
+    if (!hasCompliant) {
+      res.status(400).json({
+        error:
+          "The SWMS/JSA form must be signed by at least one team member before advancing to InProgress. Open the safety form and sign off.",
+      });
+      return;
+    }
   }
 
   const [updated] = await db

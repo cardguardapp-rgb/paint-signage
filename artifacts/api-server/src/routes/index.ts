@@ -7,6 +7,7 @@ import estimatesRouter from "./estimates";
 import quotesRouter from "./quotes";
 import phasesRouter from "./phases";
 import notificationsRouter from "./notifications";
+import swmsRouter from "./swms";
 import dashboardRouter from "./dashboard";
 
 const router: IRouter = Router();
@@ -19,6 +20,7 @@ router.use(estimatesRouter);
 router.use(quotesRouter);
 router.use(phasesRouter);
 router.use(notificationsRouter);
+router.use(swmsRouter);
 router.use(dashboardRouter);
 
 export default router;

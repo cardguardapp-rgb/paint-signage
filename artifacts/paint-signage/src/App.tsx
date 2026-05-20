@@ -16,6 +16,7 @@ import Users from "@/pages/users";
 import EstimateEditor from "@/pages/estimate-editor";
 import QuotePortal from "@/pages/quote-portal";
 import Schedule from "@/pages/schedule";
+import SwmsForm from "@/pages/swms-form";
 
 const queryClient = new QueryClient();
 
@@ -28,9 +29,11 @@ function Router() {
           <Switch>
             <Route path="/" component={Dashboard} />
             <Route path="/jobs/new" component={JobNew} />
-            <Route path="/jobs/:id" component={JobDetail} />
+            <Route path="/jobs/:id/swms/new" component={SwmsForm} />
+            <Route path="/jobs/:id/swms/:swmsId" component={SwmsForm} />
             <Route path="/jobs/:id/estimates/new" component={EstimateEditor} />
             <Route path="/jobs/:id/estimates/:estimateId" component={EstimateEditor} />
+            <Route path="/jobs/:id" component={JobDetail} />
             <Route path="/jobs" component={Jobs} />
             <Route path="/schedule" component={Schedule} />
             <Route path="/clients/new" component={NewClient} />
