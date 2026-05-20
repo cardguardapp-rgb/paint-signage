@@ -505,6 +505,139 @@ export interface SignSwmsBody {
   userId?: number;
 }
 
+export interface InvoiceLineItem {
+  description: string;
+  displayName?: string | null;
+  quantity: number;
+  unit?: string | null;
+  unitPrice: number;
+  total: number;
+}
+
+export interface InvoicePayment {
+  id: number;
+  invoiceId: number;
+  amount: number;
+  paymentMethod: string;
+  paidAt: string;
+  reference?: string | null;
+  notes?: string | null;
+  createdAt: string;
+}
+
+export type InvoiceStatus = typeof InvoiceStatus[keyof typeof InvoiceStatus];
+
+
+export const InvoiceStatus = {
+  Draft: 'Draft',
+  Sent: 'Sent',
+  PartiallyPaid: 'PartiallyPaid',
+  Paid: 'Paid',
+  Overdue: 'Overdue',
+  Void: 'Void',
+} as const;
+
+export interface Invoice {
+  id: number;
+  invoiceNumber: string;
+  jobId: number;
+  estimateId?: number | null;
+  percentage: number;
+  status: InvoiceStatus;
+  lineItems: InvoiceLineItem[];
+  subtotal: number;
+  taxRate: number;
+  taxAmount: number;
+  totalAmount: number;
+  amountPaid: number;
+  balanceDue: number;
+  payments: InvoicePayment[];
+  dueDate?: string | null;
+  sentAt?: string | null;
+  paidAt?: string | null;
+  notes?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateInvoiceBody {
+  estimateId?: number;
+  percentage?: number;
+  taxRate?: number;
+  dueDate?: string;
+  notes?: string;
+}
+
+export type UpdateInvoiceBodyStatus = typeof UpdateInvoiceBodyStatus[keyof typeof UpdateInvoiceBodyStatus];
+
+
+export const UpdateInvoiceBodyStatus = {
+  Draft: 'Draft',
+  Sent: 'Sent',
+  PartiallyPaid: 'PartiallyPaid',
+  Paid: 'Paid',
+  Overdue: 'Overdue',
+  Void: 'Void',
+} as const;
+
+export interface UpdateInvoiceBody {
+  status?: UpdateInvoiceBodyStatus;
+  dueDate?: string;
+  notes?: string;
+}
+
+export interface RecordPaymentBody {
+  amount: number;
+  paymentMethod?: string;
+  paidAt?: string;
+  reference?: string;
+  notes?: string;
+}
+
+export type FinancialSummaryPipeline = {
+  quotePipelineValue: number;
+  activePipelineValue: number;
+  totalPipelineValue: number;
+};
+
+export type FinancialSummaryInvoicing = {
+  totalInvoiced: number;
+  totalReceived: number;
+  totalOutstanding: number;
+  invoiceCount: number;
+};
+
+export type FinancialSummaryProfitability = {
+  totalInternalBudget: number;
+  totalEstimatedRevenue: number;
+  totalInvoiced: number;
+  expectedGrossProfit: number;
+  expectedMargin: number;
+  actualGrossProfit: number;
+  actualMargin: number;
+};
+
+export interface FinancialSummary {
+  pipeline: FinancialSummaryPipeline;
+  invoicing: FinancialSummaryInvoicing;
+  profitability: FinancialSummaryProfitability;
+}
+
+export interface AgedReceivable {
+  invoiceId: number;
+  invoiceNumber: string;
+  jobId: number;
+  jobTitle: string;
+  clientName?: string | null;
+  status: string;
+  totalAmount: number;
+  balanceDue: number;
+  amountPaid: number;
+  dueDate?: string | null;
+  daysOverdue: number;
+  ageBucket: string;
+}
+
 export type ListJobsParams = {
 stage?: string;
 clientId?: number;

@@ -884,6 +884,162 @@ paths:
               schema:
                 $ref: "#/components/schemas/SwmsFormDetail"
 
+  # Invoices
+  /jobs/{jobId}/invoices:
+    get:
+      operationId: listInvoices
+      tags: [invoices]
+      summary: List invoices for a job
+      parameters:
+        - name: jobId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of invoices
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Invoice"
+    post:
+      operationId: createInvoice
+      tags: [invoices]
+      summary: Generate an invoice for a job
+      parameters:
+        - name: jobId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateInvoiceBody"
+      responses:
+        "201":
+          description: Created invoice
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Invoice"
+
+  /jobs/{jobId}/invoices/{invoiceId}:
+    get:
+      operationId: getInvoice
+      tags: [invoices]
+      summary: Get an invoice
+      parameters:
+        - name: jobId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: invoiceId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Invoice
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Invoice"
+    patch:
+      operationId: updateInvoice
+      tags: [invoices]
+      summary: Update invoice status or metadata
+      parameters:
+        - name: jobId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: invoiceId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateInvoiceBody"
+      responses:
+        "200":
+          description: Updated invoice
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Invoice"
+
+  /jobs/{jobId}/invoices/{invoiceId}/payments:
+    post:
+      operationId: recordInvoicePayment
+      tags: [invoices]
+      summary: Record a payment against an invoice
+      parameters:
+        - name: jobId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: invoiceId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RecordPaymentBody"
+      responses:
+        "200":
+          description: Invoice after payment recorded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Invoice"
+
+  # Financials
+  /financials/summary:
+    get:
+      operationId: getFinancialSummary
+      tags: [financials]
+      summary: Get financial summary metrics
+      responses:
+        "200":
+          description: Financial summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FinancialSummary"
+
+  /financials/receivables:
+    get:
+      operationId: getAgedReceivables
+      tags: [financials]
+      summary: Get aged receivables list
+      responses:
+        "200":
+          description: List of aged receivables
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AgedReceivable"
+
   # Dashboard
   /dashboard/summary:
     get:
@@ -1558,3 +1714,218 @@ components:
           type: string
         userId:
           type: integer
+
+    # Invoices
+    InvoiceLineItem:
+      type: object
+      required: [description, quantity, unitPrice, total]
+      properties:
+        description:
+          type: string
+        displayName:
+          type: string
+          nullable: true
+        quantity:
+          type: number
+        unit:
+          type: string
+          nullable: true
+        unitPrice:
+          type: number
+        total:
+          type: number
+
+    InvoicePayment:
+      type: object
+      required: [id, invoiceId, amount, paymentMethod, paidAt, createdAt]
+      properties:
+        id:
+          type: integer
+        invoiceId:
+          type: integer
+        amount:
+          type: number
+        paymentMethod:
+          type: string
+        paidAt:
+          type: string
+        reference:
+          type: string
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+
+    Invoice:
+      type: object
+      required: [id, invoiceNumber, jobId, percentage, status, lineItems, subtotal, taxRate, taxAmount, totalAmount, amountPaid, balanceDue, payments, createdAt, updatedAt]
+      properties:
+        id:
+          type: integer
+        invoiceNumber:
+          type: string
+        jobId:
+          type: integer
+        estimateId:
+          type: integer
+          nullable: true
+        percentage:
+          type: number
+        status:
+          type: string
+          enum: [Draft, Sent, PartiallyPaid, Paid, Overdue, Void]
+        lineItems:
+          type: array
+          items:
+            $ref: "#/components/schemas/InvoiceLineItem"
+        subtotal:
+          type: number
+        taxRate:
+          type: number
+        taxAmount:
+          type: number
+        totalAmount:
+          type: number
+        amountPaid:
+          type: number
+        balanceDue:
+          type: number
+        payments:
+          type: array
+          items:
+            $ref: "#/components/schemas/InvoicePayment"
+        dueDate:
+          type: string
+          nullable: true
+        sentAt:
+          type: string
+          nullable: true
+        paidAt:
+          type: string
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+
+    CreateInvoiceBody:
+      type: object
+      properties:
+        estimateId:
+          type: integer
+        percentage:
+          type: number
+        taxRate:
+          type: number
+        dueDate:
+          type: string
+        notes:
+          type: string
+
+    UpdateInvoiceBody:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [Draft, Sent, PartiallyPaid, Paid, Overdue, Void]
+        dueDate:
+          type: string
+        notes:
+          type: string
+
+    RecordPaymentBody:
+      type: object
+      required: [amount]
+      properties:
+        amount:
+          type: number
+        paymentMethod:
+          type: string
+        paidAt:
+          type: string
+        reference:
+          type: string
+        notes:
+          type: string
+
+    # Financials
+    FinancialSummary:
+      type: object
+      required: [pipeline, invoicing, profitability]
+      properties:
+        pipeline:
+          type: object
+          required: [quotePipelineValue, activePipelineValue, totalPipelineValue]
+          properties:
+            quotePipelineValue:
+              type: number
+            activePipelineValue:
+              type: number
+            totalPipelineValue:
+              type: number
+        invoicing:
+          type: object
+          required: [totalInvoiced, totalReceived, totalOutstanding, invoiceCount]
+          properties:
+            totalInvoiced:
+              type: number
+            totalReceived:
+              type: number
+            totalOutstanding:
+              type: number
+            invoiceCount:
+              type: integer
+        profitability:
+          type: object
+          required: [totalInternalBudget, totalEstimatedRevenue, totalInvoiced, expectedGrossProfit, expectedMargin, actualGrossProfit, actualMargin]
+          properties:
+            totalInternalBudget:
+              type: number
+            totalEstimatedRevenue:
+              type: number
+            totalInvoiced:
+              type: number
+            expectedGrossProfit:
+              type: number
+            expectedMargin:
+              type: number
+            actualGrossProfit:
+              type: number
+            actualMargin:
+              type: number
+
+    AgedReceivable:
+      type: object
+      required: [invoiceId, invoiceNumber, jobId, jobTitle, status, totalAmount, balanceDue, amountPaid, daysOverdue, ageBucket]
+      properties:
+        invoiceId:
+          type: integer
+        invoiceNumber:
+          type: string
+        jobId:
+          type: integer
+        jobTitle:
+          type: string
+        clientName:
+          type: string
+          nullable: true
+        status:
+          type: string
+        totalAmount:
+          type: number
+        balanceDue:
+          type: number
+        amountPaid:
+          type: number
+        dueDate:
+          type: string
+          nullable: true
+        daysOverdue:
+          type: integer
+        ageBucket:
+          type: string

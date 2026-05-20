@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { LayoutDashboard, Briefcase, Users, Building2, Paintbrush, CalendarDays } from "lucide-react";
+import { LayoutDashboard, Briefcase, Users, Building2, Paintbrush, CalendarDays, TrendingUp } from "lucide-react";
 import { NotificationBell } from "./notification-bell";
 
 export function Shell({ children }: { children: React.ReactNode }) {
@@ -11,6 +11,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
     { name: "Schedule", href: "/schedule", icon: CalendarDays },
     { name: "Clients", href: "/clients", icon: Building2 },
     { name: "Users", href: "/users", icon: Users },
+    { name: "Financials", href: "/financials", icon: TrendingUp },
   ];
 
   return (

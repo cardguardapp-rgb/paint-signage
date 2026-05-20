@@ -7,19 +7,32 @@ import {
   useListEstimates, 
   useApproveEstimate,
   useListSwmsForms,
+  useListInvoices,
   getGetJobQueryKey, 
   getListEstimatesQueryKey,
   getListSwmsFormsQueryKey,
+  getListInvoicesQueryKey,
 } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowRight, CheckCircle2, Clock, MapPin, AlignLeft, Calculator, Plus, Link as LinkIcon, Edit2, MessageSquareWarning, ShieldCheck, Shield, ShieldAlert } from "lucide-react";
+import { ArrowRight, CheckCircle2, Clock, MapPin, AlignLeft, Calculator, Plus, Link as LinkIcon, Edit2, MessageSquareWarning, ShieldCheck, Shield, ShieldAlert, FileText, Receipt } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { cn } from "@/lib/utils";
 
 const stageOrder = ["Lead", "Quoting", "Approved", "Scheduled", "InProgress", "ComplianceReview", "Invoiced", "Closed"];
+
+const INVOICE_ELIGIBLE_STAGES = ["Approved", "Scheduled", "InProgress", "ComplianceReview", "Invoiced"];
+const INVOICE_STATUS_CLASS: Record<string, string> = {
+  Draft: "bg-gray-100 text-gray-600",
+  Sent: "bg-blue-100 text-blue-700",
+  PartiallyPaid: "bg-orange-100 text-orange-700",
+  Paid: "bg-green-100 text-green-700",
+  Overdue: "bg-red-100 text-red-700",
+  Void: "bg-gray-100 text-gray-400",
+};
 
 export default function JobDetail() {
   const params = useParams();
@@ -37,12 +50,21 @@ export default function JobDetail() {
     query: { enabled: !!id, queryKey: getListSwmsFormsQueryKey(id) },
   });
 
+  const { data: invoices = [] } = useListInvoices(id, {
+    query: { enabled: !!id, queryKey: getListInvoicesQueryKey(id) },
+  });
+
   if (loadingJob) return <Skeleton className="h-[600px] w-full" />;
   if (!job) return <div className="text-center p-12 text-lg text-muted-foreground">Job not found</div>;
 
   const currentStageIndex = stageOrder.indexOf(job.stage);
   const nextStage = currentStageIndex < stageOrder.length - 1 ? stageOrder[currentStageIndex + 1] : null;
   const jobEstimates = estimates ?? [];
+
+  const activeInvoices = invoices.filter((i) => i.status !== "Void");
+  const totalInvoiced = activeInvoices.reduce((s, i) => s + Number(i.totalAmount), 0);
+  const totalReceived = activeInvoices.reduce((s, i) => s + Number(i.amountPaid), 0);
+  const totalOutstanding = activeInvoices.reduce((s, i) => s + Number(i.balanceDue), 0);
 
   const handleAdvanceStage = () => {
     advanceStage.mutate({ id }, {
@@ -240,6 +262,66 @@ export default function JobDetail() {
                         )}
                       </div>
                     </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Invoicing */}
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between pb-3 border-b bg-muted/20">
+              <CardTitle className="flex items-center gap-2 text-base">
+                <Receipt className="h-4 w-4 text-primary" />
+                Invoicing
+              </CardTitle>
+              {INVOICE_ELIGIBLE_STAGES.includes(job.stage) && (
+                <Link href={`/jobs/${job.id}/invoices/new`}>
+                  <Button size="sm" variant="outline" className="h-8">
+                    <FileText className="h-3 w-3 mr-1" />
+                    Generate Invoice
+                  </Button>
+                </Link>
+              )}
+            </CardHeader>
+            <CardContent className="pt-4">
+              {activeInvoices.length === 0 ? (
+                <p className="text-sm text-muted-foreground">No invoices created yet.</p>
+              ) : (
+                <div className="space-y-3">
+                  {/* Summary row */}
+                  <div className="grid grid-cols-3 gap-2 text-center p-3 bg-muted/40 rounded-lg">
+                    <div>
+                      <div className="text-xs text-muted-foreground">Total Invoiced</div>
+                      <div className="font-semibold text-sm">${totalInvoiced.toLocaleString("en-US", { minimumFractionDigits: 2 })}</div>
+                    </div>
+                    <div>
+                      <div className="text-xs text-muted-foreground">Received</div>
+                      <div className="font-semibold text-sm text-green-600">${totalReceived.toLocaleString("en-US", { minimumFractionDigits: 2 })}</div>
+                    </div>
+                    <div>
+                      <div className="text-xs text-muted-foreground">Outstanding</div>
+                      <div className={cn("font-semibold text-sm", totalOutstanding > 0 ? "text-orange-600" : "text-muted-foreground")}>
+                        ${totalOutstanding.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                      </div>
+                    </div>
+                  </div>
+                  {/* Invoice list */}
+                  {invoices.map((inv) => (
+                    <Link key={inv.id} href={`/jobs/${job.id}/invoices/${inv.id}`}>
+                      <div className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/40 cursor-pointer transition-colors">
+                        <div>
+                          <div className="font-mono text-sm font-semibold">{inv.invoiceNumber}</div>
+                          <div className="text-xs text-muted-foreground">{inv.percentage}% of job</div>
+                        </div>
+                        <div className="text-right">
+                          <div className="font-medium text-sm">${Number(inv.totalAmount).toLocaleString("en-US", { minimumFractionDigits: 2 })}</div>
+                          <Badge className={cn("text-xs mt-0.5", INVOICE_STATUS_CLASS[inv.status] ?? "bg-muted text-muted-foreground")}>
+                            {inv.status === "PartiallyPaid" ? "Part Paid" : inv.status}
+                          </Badge>
+                        </div>
+                      </div>
+                    </Link>
                   ))}
                 </div>
               )}

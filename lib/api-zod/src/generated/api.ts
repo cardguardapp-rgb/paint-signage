@@ -1044,6 +1044,275 @@ export const SignSwmsFormResponse = zod.object({
 
 
 /**
+ * @summary List invoices for a job
+ */
+export const ListInvoicesParams = zod.object({
+  "jobId": zod.coerce.number()
+})
+
+export const ListInvoicesResponseItem = zod.object({
+  "id": zod.number(),
+  "invoiceNumber": zod.string(),
+  "jobId": zod.number(),
+  "estimateId": zod.number().nullish(),
+  "percentage": zod.number(),
+  "status": zod.enum(['Draft', 'Sent', 'PartiallyPaid', 'Paid', 'Overdue', 'Void']),
+  "lineItems": zod.array(zod.object({
+  "description": zod.string(),
+  "displayName": zod.string().nullish(),
+  "quantity": zod.number(),
+  "unit": zod.string().nullish(),
+  "unitPrice": zod.number(),
+  "total": zod.number()
+})),
+  "subtotal": zod.number(),
+  "taxRate": zod.number(),
+  "taxAmount": zod.number(),
+  "totalAmount": zod.number(),
+  "amountPaid": zod.number(),
+  "balanceDue": zod.number(),
+  "payments": zod.array(zod.object({
+  "id": zod.number(),
+  "invoiceId": zod.number(),
+  "amount": zod.number(),
+  "paymentMethod": zod.string(),
+  "paidAt": zod.string(),
+  "reference": zod.string().nullish(),
+  "notes": zod.string().nullish(),
+  "createdAt": zod.string()
+})),
+  "dueDate": zod.string().nullish(),
+  "sentAt": zod.string().nullish(),
+  "paidAt": zod.string().nullish(),
+  "notes": zod.string().nullish(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
+export const ListInvoicesResponse = zod.array(ListInvoicesResponseItem)
+
+
+/**
+ * @summary Generate an invoice for a job
+ */
+export const CreateInvoiceParams = zod.object({
+  "jobId": zod.coerce.number()
+})
+
+export const CreateInvoiceBody = zod.object({
+  "estimateId": zod.number().optional(),
+  "percentage": zod.number().optional(),
+  "taxRate": zod.number().optional(),
+  "dueDate": zod.string().optional(),
+  "notes": zod.string().optional()
+})
+
+
+/**
+ * @summary Get an invoice
+ */
+export const GetInvoiceParams = zod.object({
+  "jobId": zod.coerce.number(),
+  "invoiceId": zod.coerce.number()
+})
+
+export const GetInvoiceResponse = zod.object({
+  "id": zod.number(),
+  "invoiceNumber": zod.string(),
+  "jobId": zod.number(),
+  "estimateId": zod.number().nullish(),
+  "percentage": zod.number(),
+  "status": zod.enum(['Draft', 'Sent', 'PartiallyPaid', 'Paid', 'Overdue', 'Void']),
+  "lineItems": zod.array(zod.object({
+  "description": zod.string(),
+  "displayName": zod.string().nullish(),
+  "quantity": zod.number(),
+  "unit": zod.string().nullish(),
+  "unitPrice": zod.number(),
+  "total": zod.number()
+})),
+  "subtotal": zod.number(),
+  "taxRate": zod.number(),
+  "taxAmount": zod.number(),
+  "totalAmount": zod.number(),
+  "amountPaid": zod.number(),
+  "balanceDue": zod.number(),
+  "payments": zod.array(zod.object({
+  "id": zod.number(),
+  "invoiceId": zod.number(),
+  "amount": zod.number(),
+  "paymentMethod": zod.string(),
+  "paidAt": zod.string(),
+  "reference": zod.string().nullish(),
+  "notes": zod.string().nullish(),
+  "createdAt": zod.string()
+})),
+  "dueDate": zod.string().nullish(),
+  "sentAt": zod.string().nullish(),
+  "paidAt": zod.string().nullish(),
+  "notes": zod.string().nullish(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
+
+
+/**
+ * @summary Update invoice status or metadata
+ */
+export const UpdateInvoiceParams = zod.object({
+  "jobId": zod.coerce.number(),
+  "invoiceId": zod.coerce.number()
+})
+
+export const UpdateInvoiceBody = zod.object({
+  "status": zod.enum(['Draft', 'Sent', 'PartiallyPaid', 'Paid', 'Overdue', 'Void']).optional(),
+  "dueDate": zod.string().optional(),
+  "notes": zod.string().optional()
+})
+
+export const UpdateInvoiceResponse = zod.object({
+  "id": zod.number(),
+  "invoiceNumber": zod.string(),
+  "jobId": zod.number(),
+  "estimateId": zod.number().nullish(),
+  "percentage": zod.number(),
+  "status": zod.enum(['Draft', 'Sent', 'PartiallyPaid', 'Paid', 'Overdue', 'Void']),
+  "lineItems": zod.array(zod.object({
+  "description": zod.string(),
+  "displayName": zod.string().nullish(),
+  "quantity": zod.number(),
+  "unit": zod.string().nullish(),
+  "unitPrice": zod.number(),
+  "total": zod.number()
+})),
+  "subtotal": zod.number(),
+  "taxRate": zod.number(),
+  "taxAmount": zod.number(),
+  "totalAmount": zod.number(),
+  "amountPaid": zod.number(),
+  "balanceDue": zod.number(),
+  "payments": zod.array(zod.object({
+  "id": zod.number(),
+  "invoiceId": zod.number(),
+  "amount": zod.number(),
+  "paymentMethod": zod.string(),
+  "paidAt": zod.string(),
+  "reference": zod.string().nullish(),
+  "notes": zod.string().nullish(),
+  "createdAt": zod.string()
+})),
+  "dueDate": zod.string().nullish(),
+  "sentAt": zod.string().nullish(),
+  "paidAt": zod.string().nullish(),
+  "notes": zod.string().nullish(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
+
+
+/**
+ * @summary Record a payment against an invoice
+ */
+export const RecordInvoicePaymentParams = zod.object({
+  "jobId": zod.coerce.number(),
+  "invoiceId": zod.coerce.number()
+})
+
+export const RecordInvoicePaymentBody = zod.object({
+  "amount": zod.number(),
+  "paymentMethod": zod.string().optional(),
+  "paidAt": zod.string().optional(),
+  "reference": zod.string().optional(),
+  "notes": zod.string().optional()
+})
+
+export const RecordInvoicePaymentResponse = zod.object({
+  "id": zod.number(),
+  "invoiceNumber": zod.string(),
+  "jobId": zod.number(),
+  "estimateId": zod.number().nullish(),
+  "percentage": zod.number(),
+  "status": zod.enum(['Draft', 'Sent', 'PartiallyPaid', 'Paid', 'Overdue', 'Void']),
+  "lineItems": zod.array(zod.object({
+  "description": zod.string(),
+  "displayName": zod.string().nullish(),
+  "quantity": zod.number(),
+  "unit": zod.string().nullish(),
+  "unitPrice": zod.number(),
+  "total": zod.number()
+})),
+  "subtotal": zod.number(),
+  "taxRate": zod.number(),
+  "taxAmount": zod.number(),
+  "totalAmount": zod.number(),
+  "amountPaid": zod.number(),
+  "balanceDue": zod.number(),
+  "payments": zod.array(zod.object({
+  "id": zod.number(),
+  "invoiceId": zod.number(),
+  "amount": zod.number(),
+  "paymentMethod": zod.string(),
+  "paidAt": zod.string(),
+  "reference": zod.string().nullish(),
+  "notes": zod.string().nullish(),
+  "createdAt": zod.string()
+})),
+  "dueDate": zod.string().nullish(),
+  "sentAt": zod.string().nullish(),
+  "paidAt": zod.string().nullish(),
+  "notes": zod.string().nullish(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
+
+
+/**
+ * @summary Get financial summary metrics
+ */
+export const GetFinancialSummaryResponse = zod.object({
+  "pipeline": zod.object({
+  "quotePipelineValue": zod.number(),
+  "activePipelineValue": zod.number(),
+  "totalPipelineValue": zod.number()
+}),
+  "invoicing": zod.object({
+  "totalInvoiced": zod.number(),
+  "totalReceived": zod.number(),
+  "totalOutstanding": zod.number(),
+  "invoiceCount": zod.number()
+}),
+  "profitability": zod.object({
+  "totalInternalBudget": zod.number(),
+  "totalEstimatedRevenue": zod.number(),
+  "totalInvoiced": zod.number(),
+  "expectedGrossProfit": zod.number(),
+  "expectedMargin": zod.number(),
+  "actualGrossProfit": zod.number(),
+  "actualMargin": zod.number()
+})
+})
+
+
+/**
+ * @summary Get aged receivables list
+ */
+export const GetAgedReceivablesResponseItem = zod.object({
+  "invoiceId": zod.number(),
+  "invoiceNumber": zod.string(),
+  "jobId": zod.number(),
+  "jobTitle": zod.string(),
+  "clientName": zod.string().nullish(),
+  "status": zod.string(),
+  "totalAmount": zod.number(),
+  "balanceDue": zod.number(),
+  "amountPaid": zod.number(),
+  "dueDate": zod.string().nullish(),
+  "daysOverdue": zod.number(),
+  "ageBucket": zod.string()
+})
+export const GetAgedReceivablesResponse = zod.array(GetAgedReceivablesResponseItem)
+
+
+/**
  * @summary Get dashboard KPI summary
  */
 export const GetDashboardSummaryResponse = zod.object({

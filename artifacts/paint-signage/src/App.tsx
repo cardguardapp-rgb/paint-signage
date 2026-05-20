@@ -17,6 +17,8 @@ import EstimateEditor from "@/pages/estimate-editor";
 import QuotePortal from "@/pages/quote-portal";
 import Schedule from "@/pages/schedule";
 import SwmsForm from "@/pages/swms-form";
+import InvoiceDetail from "@/pages/invoice-detail";
+import Financials from "@/pages/financials";
 
 const queryClient = new QueryClient();
 
@@ -31,6 +33,8 @@ function Router() {
             <Route path="/jobs/new" component={JobNew} />
             <Route path="/jobs/:id/swms/new" component={SwmsForm} />
             <Route path="/jobs/:id/swms/:swmsId" component={SwmsForm} />
+            <Route path="/jobs/:id/invoices/new" component={InvoiceDetail} />
+            <Route path="/jobs/:id/invoices/:invoiceId" component={InvoiceDetail} />
             <Route path="/jobs/:id/estimates/new" component={EstimateEditor} />
             <Route path="/jobs/:id/estimates/:estimateId" component={EstimateEditor} />
             <Route path="/jobs/:id" component={JobDetail} />
@@ -40,6 +44,7 @@ function Router() {
             <Route path="/clients/:id" component={ClientDetail} />
             <Route path="/clients" component={Clients} />
             <Route path="/users" component={Users} />
+            <Route path="/financials" component={Financials} />
             <Route component={NotFound} />
           </Switch>
         </Shell>
